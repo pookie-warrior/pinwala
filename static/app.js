@@ -49,9 +49,12 @@ function landing() {
   view(`
     <div class="stats" id="stats"></div>
     <p class="recent" id="recent" aria-live="polite"></p>
-    <h1>Get your shop found on Google.</h1>
+    <h1>Get your shop found on <span class="gold">Google.</span></h1>
     <p class="lead">See how many shops near you are on Google in 10 seconds. Then talk for two minutes and Pinwala prepares your profile. You approve everything.</p>
     <div class="langs"><span class="chip on">Talk in English</span><span class="chip on">हिंदी</span><span class="chip on">বাংলা</span></div>
+    <div class="hero-map" aria-hidden="true">${[[14,30],[28,62],[40,22],[55,70],[66,34],[78,58],[86,24],[22,82],[70,84],[48,46]].map(([x, y], i) =>
+      `<span class="rp" style="left:${x}%;top:${y}%;--d:${i * 110}ms"></span>`).join("")}
+      <span class="mp"></span><span class="ring"></span><span class="mp-label">Your shop</span></div>
     <div class="card"><h2>Check your street: is your shop on Google Maps?</h2>
       <button class="btn primary" id="yes">Yes, find my shop</button>
       <button class="btn dark" id="no">No, not yet</button></div>
@@ -138,12 +141,12 @@ function renderSnapshot() {
   const dots = r.rivals.map((x) => {
     const dx = (x.lng - S.lng) / 0.0186 * 100 + 50, dy = 50 - (x.lat - S.lat) / 0.018 * 100;
     return `<span class="pin" style="left:${Math.max(3, Math.min(97, dx))}%;top:${Math.max(4, Math.min(96, dy))}%"></span>`;
-  }).join("");
+  }).join("").replace(/class="pin" style="/g, (() => { let i = 0; return () => `class="pin" style="--d:${(i++) * 60}ms;`; })());
   const p = S.place;
   const missing = p ? ["phone", "website", "hours"].filter((k) => !p[k]) : [];
   view(`<h2>${p ? esc(p.name) : "Your shop vs. Google"}</h2>
     <div class="card">
-      <div class="map">${dots}<span class="pin me" style="left:50%;top:50%"></span></div>
+      <div class="map">${dots}<span class="ring" style="left:50%;top:50%"></span><span class="pin me" style="left:50%;top:50%;--d:${Math.min(r.rivals.length, 20) * 60 + 200}ms"></span></div>
       ${p
         ? `<p><b>${p.rating ?? "–"}★</b> from <b>${p.reviews}</b> reviews · ${p.photos} photos${missing.length ? ` · missing: ${missing.join(", ")}` : ""}</p>`
         : `<p><span class="big">${n}</span><br>${esc(S.kind)}s within 1 km are on Google. <b>You're not, yet.</b></p>`}
@@ -221,7 +224,11 @@ async function talk() {
         shop_name: S.place ? S.place.name : "not known yet", rival_count: String(S.rivals.count),
         top_rival_summary: top ? `${top.rating} stars, ${top.reviews} reviews` : "none found",
       },
-      onConnect: () => { connected = true; st.textContent = "Listening…"; orb.classList.add("live"); },
+      onConnect: () => { connected = true; st.textContent = "Listening…"; orb.classList.add("live");
+        const tick = () => { if (!conv) return requestAnimationFrame(tick);
+          let v = 0; try { v = Math.max(conv.getOutputVolume?.() || 0, (conv.getInputVolume?.() || 0) * 0.8); } catch {}
+          orb.style.setProperty("--v", Math.min(1, v * 2.2).toFixed(3)); if (orb.isConnected) requestAnimationFrame(tick); };
+        requestAnimationFrame(tick); },
       onMessage: (m) => say(m.source === "user" ? "you" : "pin", m.message),
       onModeChange: (m) => { mode = m.mode; st.textContent = m.mode === "speaking" ? "Pinwala is speaking…" : "Listening…";
         if (finishing && m.mode === "listening") setTimeout(hangUp, 800); },

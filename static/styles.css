@@ -3,15 +3,15 @@
   --ink: #1D2421; --slate: #7C8A86; --line: #E2D9C6; --ok: #2F7D5B; --warn: #B4691F;
 }
 * { box-sizing: border-box; }
-body { margin: 0; min-height: 100dvh; background: var(--lacquer); color: var(--ivory);
+body { margin: 0; min-height: 100dvh; background: radial-gradient(900px 520px at 85% -8%, #24564A 0%, rgba(36,86,74,0) 62%), radial-gradient(700px 500px at -10% 110%, #1A4238 0%, rgba(26,66,56,0) 60%), linear-gradient(180deg, #11302A 0%, #0B201B 100%); background-attachment: fixed; color: var(--ivory);
   font: 17px/1.5 "Anek Latin", system-ui, sans-serif; display: flex; flex-direction: column; }
 .bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; }
-.logo { display: flex; align-items: center; gap: 8px; font: 600 20px "Fraunces", serif; letter-spacing: .2px; color: var(--ivory); text-decoration: none; }
+.logo { display: flex; align-items: center; gap: 8px; font: 400 22px "Gloock", serif; letter-spacing: .2px; color: var(--ivory); text-decoration: none; }
 .count { font-size: 13px; color: var(--marigold); }
 main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 8px 16px 24px; }
 .foot { text-align: center; font-size: 12px; color: #9FB3AC; padding: 12px 16px 20px; }
-h1 { font: 600 30px/1.15 "Fraunces", serif; margin: 18px 0 10px; }
-h2 { font: 600 22px/1.2 "Fraunces", serif; margin: 6px 0 12px; }
+h1 { font: 400 34px/1.12 "Gloock", serif; margin: 18px 0 10px; }
+h2 { font: 400 24px/1.2 "Gloock", serif; margin: 6px 0 12px; }
 p.lead { color: #CFDDD7; margin: 0 0 20px; }
 .card { background: var(--ivory); color: var(--ink); border-radius: 18px; padding: 18px;
   margin: 12px 0; background-image: linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%); }
@@ -34,7 +34,7 @@ input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif;
 .grid button { padding: 14px 8px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff;
   font: 500 16px "Anek Latin", sans-serif; color: var(--ink); }
 .grid button.on { border-color: var(--marigold); background: #FCEFD8; }
-.big { font: 600 44px/1 "Fraunces", serif; color: var(--marigold); }
+.big { font: 400 52px/1 "Gloock", serif; color: var(--marigold); }
 .muted { color: #A9BBB5; font-size: 14px; }
 .card .muted { color: #5B6965; }
 .map { position: relative; height: 220px; border-radius: 14px; background: #E8DFCC; overflow: hidden; margin: 10px 0; }
@@ -93,3 +93,58 @@ input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif;
 @media (prefers-reduced-motion: reduce) { .loading img { animation: none; } }
 .row .tag { white-space: normal; text-align: right; max-width: 62%; line-height: 1.35; padding: 4px 10px; border-radius: 12px; }
 .card .btn.ghost { color: var(--ink); border-color: #CFC4AE; }
+
+/* ---- gloss & motion layer ---- */
+:root { --gold-1: #F6D58C; --gold-2: #E8A33D; --gold-3: #C9831F; }
+.gold { background: linear-gradient(100deg, var(--gold-3) 0%, var(--gold-1) 45%, var(--gold-2) 70%, var(--gold-3) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card { position: relative; overflow: hidden; background: linear-gradient(165deg, #FDFAF2 0%, #F5EDDC 100%);
+  border: 1px solid rgba(201,131,31,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 22px 44px -26px rgba(0,0,0,.75); }
+.card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 46%; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0)); }
+.card > * { position: relative; }
+.btn { position: relative; overflow: hidden; transition: transform .15s ease-out, box-shadow .2s ease-out; }
+.btn:active { transform: translateY(1px) scale(.995); }
+.btn.primary { background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 52%, var(--gold-3) 100%); color: #2A1E08;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 0 -2px 0 rgba(120,70,10,.25), 0 10px 22px -12px rgba(201,131,31,.8); }
+.btn.primary::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; pointer-events: none;
+  background: linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0)); transform: skewX(-18deg);
+  animation: sheen 4.5s ease-in-out infinite; }
+.btn.primary:disabled::after { display: none; }
+@keyframes sheen { 0%, 70% { left: -60% } 100% { left: 130% } }
+.btn.dark { background: linear-gradient(180deg, #1C4339, #0F2A24); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 22px -14px rgba(0,0,0,.8); }
+.stats span { backdrop-filter: blur(6px); background: rgba(23,57,47,.7); }
+.chip.on { background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); border-color: transparent; }
+#app > * { animation: fadeup .38s ease-out both; }
+#app > *:nth-child(2) { animation-delay: .04s } #app > *:nth-child(3) { animation-delay: .08s } #app > *:nth-child(4) { animation-delay: .12s }
+@keyframes fadeup { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+
+/* hero map: rivals drop in, then his pin, then a found ripple */
+.hero-map { position: relative; height: 150px; margin: 18px 0 4px; border-radius: 18px; overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(232,163,61,.08), rgba(0,0,0,0) 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 26px), rgba(10,29,25,.55);
+  border: 1px solid #2C4A40; }
+.hero-map .rp, .map .pin { animation: pindrop .45s ease-out both; animation-delay: var(--d, 0ms); }
+.hero-map .rp { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #7C8A86; border: 2px solid #DDE6E2; transform: translate(-50%, -50%); }
+.hero-map .mp { position: absolute; left: 50%; top: 52%; width: 18px; height: 18px; border-radius: 50% 50% 50% 0; background: linear-gradient(135deg, var(--gold-1), var(--gold-3));
+  transform: translate(-50%, -100%) rotate(-45deg); animation: mpdrop .55s ease-out 1.25s both; box-shadow: 0 4px 10px rgba(0,0,0,.4); }
+.hero-map .ring, .map .ring { position: absolute; left: 50%; top: 52%; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gold-2);
+  transform: translate(-50%, -50%) scale(.2); opacity: 0; animation: ring 2.4s ease-out 1.7s infinite; pointer-events: none; }
+.map .ring { top: 50%; animation-delay: 1.4s; }
+.hero-map .mp-label { position: absolute; left: 50%; top: calc(52% + 6px); transform: translateX(-50%); font-size: 12px; font-weight: 600; color: var(--gold-1);
+  animation: fadeup .4s ease-out 1.6s both; white-space: nowrap; }
+.map .pin.me { animation: mpdrop2 .55s ease-out both; animation-delay: var(--d, 1s); }
+@keyframes pindrop { from { opacity: 0; transform: translate(-50%, -140%) } to { opacity: 1; transform: translate(-50%, -50%) } }
+@keyframes mpdrop { from { opacity: 0; transform: translate(-50%, -260%) rotate(-45deg) } to { opacity: 1; transform: translate(-50%, -100%) rotate(-45deg) } }
+@keyframes mpdrop2 { from { opacity: 0; transform: translate(-50%, -220%) } to { opacity: 1; transform: translate(-50%, -50%) } }
+@keyframes ring { 0% { opacity: .9; transform: translate(-50%, -50%) scale(.3) } 100% { opacity: 0; transform: translate(-50%, -50%) scale(5) } }
+
+/* voice orb reacts to volume */
+.orb { --v: 0; background: radial-gradient(circle at 35% 30%, #FFE7B0 0%, var(--gold-2) 45%, var(--gold-3) 100%);
+  transform: scale(calc(1 + var(--v) * .35)); transition: transform .08s linear;
+  box-shadow: 0 0 calc(18px + var(--v) * 50px) rgba(232,163,61,calc(.25 + var(--v) * .5)); }
+
+@media (prefers-reduced-motion: reduce) {
+  #app > *, .hero-map *, .map .pin, .btn.primary::after { animation: none !important; }
+  .orb { transform: none; }
+}
