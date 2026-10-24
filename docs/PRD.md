@@ -18,7 +18,7 @@ Pinwala turns one photo and one voice note into a ready Google listing and posts
 | **Track 2 deliverable:** "One order, end to end": a real customer from first message to payment or signup | One real shop owner going landing page → listing → ₹99 payment |
 | Judging, round 1 (table): Problem & Insight 25 · Ambition 15 · Agentic Depth 15 · **Traction 25** · Demo & Polish 20 | Users are worth as much as the problem; start sharing the link early |
 | Judging, round 2 (top 10 on stage, 7:00): 20 · 20 · 20 · **Traction 30** · 10 | |
-| Credits: AgenticOrg (required), Replit, ElevenLabs + Vobiz, Pine Labs, Render, Greptile | Replit for hosting; ElevenLabs for the voice agent; **Vobiz for missed-call phone verification** |
+| Credits: AgenticOrg (required), Replit, ElevenLabs + Vobiz, Pine Labs, Render, Greptile | Replit for hosting; ElevenLabs for the voice agent; **Vobiz for phone verification** (Pinwala calls, press 1; missed-call fallback) |
 | "Who owns what we build? You do." | Pinwala is Shipra's |
 
 ## Name: Pinwala
@@ -68,15 +68,15 @@ Out of scope for now: chains, businesses with no shopfront, ads management.
 | 1 | **Landing + branch:** "Is your shop on Google Maps?" (mobile-first, English; বাংলা/हिंदी *coming soon*) | 1 | Real |
 | 2 | **Find my shop** (search by name / near me / paste link) and **photo + pin** for new shops, on one map screen | 2a, 2b | Real |
 | 3 | **Instant rivals snapshot** from Google Places (map + numbers / scorecard) | 3 | Real |
-| 4 | **ElevenLabs voice agent** (~6 questions, knows the snapshot) + field extraction; Sarvam Document AI reads the photo | 4 | Real (backup: on-screen questions + voice notes) |
-| 5 | **Summary → owner approves** (human approval 1) + Gmail, consent + **phone verified by missed call to Pinwala's Vobiz number** (SMS code via Firebase as fallback; Telegram optional for updates) | 5 | Real |
+| 4 | **ElevenLabs voice agent** (~6 questions, knows the snapshot; **English, Hindi, Bengali**) + field extraction in English; Sarvam Document AI reads the photo | 4 | Real (backup: on-screen questions + voice notes) |
+| 5 | **Summary → owner approves** (human approval 1) + Gmail, consent + **phone verified: Pinwala calls, owner presses 1** (fallbacks: missed call to Pinwala, then SMS code via Firebase; Telegram optional for updates) | 5 | Real |
 | 6 | **n8n** merges everything into profile data; **outcome screen** (3 tiles) | 6–7 | Real |
 | 7 | **₹99 Pine Labs checkout** | 8 | **Real payment** |
 | 8 | **AgenticOrg Pinwala Profile Agent** prepares the profile / fixes pack → **Pinwala reviewer approves in AgenticOrg** (human approval 2) | 8b | Real agent + real approval |
 | 9 | **After approval:** new shop → verification code in app (approval 3) → live → ownership invite (**simulated**); existing shop → report + fixes released | 9a, 9b | Google steps simulated |
 | 10 | **Progress updates** in the app at each stage; Telegram too if connected | 10 | Real |
 
-**Not today:** বাংলা/हिंदी, WhatsApp, two-way Telegram chat, login screen / phone login, SMS through Vobiz (India DLT registration), voice-call codes, QR posters, real Google publishing, Rival Watch heatmap, weekly posts.
+**Not today:** বাংলা/हिंदी, WhatsApp, two-way Telegram chat, login screen / phone login, SMS through Vobiz (India DLT registration), spoken codes, QR posters, real Google publishing, Rival Watch heatmap, weekly posts.
 
 **Cut order if behind:** item 4 falls back to on-screen questions + voice notes (decided at 2 PM); item 9 shows the simulated steps as one screen instead of animated stages; item 3 for existing shops shows numbers without the map. Items 5, 7, 8 are the hackathon requirements and never get cut.
 
@@ -138,7 +138,7 @@ The web app on Replit is what the owner sees. Keys stay on servers, never on the
 Owner's phone (web app on Replit, mobile-first)
   ├─ Google Places ── find his shop / rivals snapshot (called from the web app, for speed)
   ├─ ElevenLabs voice agent (their web SDK in our page) ── conversation + extracted fields
-  ├─ owner approves (1) → verify phone by missed call (Vobiz → /api/vobiz/answer) → Pine Labs checkout ₹99
+  ├─ owner approves (1) → verify phone: Vobiz calls him, press 1 (fallback: missed call in) → Pine Labs checkout ₹99
   ▼
 n8n Cloud
   ├─ Sarvam Document AI (Extract) ── reads the shop photo (async: submit, poll, fetch)
@@ -153,13 +153,14 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | Piece | Choice | Notes |
 | --- | --- | --- |
 | Web app | Python FastAPI (in `~/Pinwala`) on Replit | Mobile-first; HTTPS needed for mic, camera, GPS |
-| Find shop / rivals | Google Places API (New): autocomplete, nearby search, place details | Own key, or Replit's Maps connector if it covers Places (New). Short Maps links resolved on the server |
-| Voice agent | ElevenLabs agent + web SDK | Given the snapshot when the call starts; extracts named fields at the end (verify in ElevenLabs settings) |
+| Find shop / rivals | Google Places API (New), own key (tested 24 Oct, 0.4–0.7 s per call). **Find my shop:** Autocomplete as he types (biased 5 km around him) + Place Details (category, status, phone, website, hours, ≤10 photos, ≤5 reviews, Maps link, review link `search.google.com/local/writereview?placeid=<id>`). **Rivals:** **Text Search for his shop type** (e.g. "sweet shop") restricted to a ~1 km box around his pin, max 20 → show "20+". **Not** Nearby Search by category: it returned McDonald's, cafés and ice-cream parlours, because Google files most Indian sweet shops as *candy store* | Short Maps links resolved on the server |
+| Voice agent | ElevenLabs agent *Pinwala Shop Interviewer* + web SDK ([ELEVENLABS_AGENT.md](ELEVENLABS_AGENT.md)) | English/Hindi/Bengali with Detect language; snapshot passed as dynamic variables; 10 Data collection fields (English); allowlisted to `pinwaala.replit.app` |
 | Photo reading | Sarvam Document AI, Extract with a field schema | JPG/PNG, Bengali/Hindi/English; async; 10 requests/min |
 | Orchestration | n8n Cloud trial | Separate from Beacon |
 | Agent + approval | AgenticOrg | No ElevenLabs/Vobiz integration exists; agent is text-in/JSON-out. API key from Settings → API Keys (admin only). Python SDK `client.agents.run(...)` → `status`, `output`. No callbacks: poll |
 | Payment | Pine Labs checkout + confirmation | |
-| Phone verification | **Missed call to +91 80 6426 9429 (Vobiz).** XML Application answer URL → `POST /api/vobiz/answer` on our app. On `Event=StartApp` (ringing), match `From` (format `91XXXXXXXXXX`, no `+`; match on last 10 digits) to the pending number, mark verified, reply `<Response><Hangup/></Response>` → call rejected unanswered, ₹0 (tested 24 Oct with two phones). Ignore the `Hangup` event. Fallback: Firebase phone sign-in (SMS code) | The app checks verification status every second for up to 2 minutes |
+| Phone verification (main) | **Pinwala calls, press 1 (Vobiz outbound).** `POST https://api.vobiz.ai/api/v1/Account/{auth_id}/Call/` with headers `X-Auth-ID`, `X-Auth-Token`; body `from: 918064269429`, `to: 91XXXXXXXXXX`, `answer_url` + `hangup_url` (our app), `time_limit: 60`, `hangup_on_ring: 40`. Answer URL returns `<Response><Gather inputType="dtmf" numDigits="1" executionTimeout="15" action="…/api/vobiz/keypress?v=<id>" method="POST"><Speak>Hello, this is Pinwala. Press 1 to confirm this is your number.</Speak></Gather><Speak>We did not get your answer. Goodbye.</Speak></Response>`. **`inputType="dtmf"` is required**: without it Vobiz skips the Gather silently (first test failed this way). Keypress URL receives `Digits`; `1` → verified, reply `<Speak>Thank you, your number is verified.</Speak><Hangup/>`. Tested 24 Oct: works, ~12 s, billed as 60 s | App checks status every second; max 3 calls per number per 10 min |
+| Phone verification (fallback) | **Missed call to +91 80 6426 9429 (Vobiz inbound).** XML Application answer URL → `POST /api/vobiz/answer`. On `Event=StartApp` (ringing), match `From` (`91XXXXXXXXXX`, no `+`; match last 10 digits), mark verified, reply `<Response><Hangup/></Response>` → rejected unanswered, ₹0 (tested with two phones). Ignore the `Hangup` event. Then Firebase SMS code | |
 | Updates | Telegram bot, optional, one-way | |
 | Data | Supabase | |
 
@@ -169,7 +170,7 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 
 1. **No guessing.** Each field carries a source: *heard*, *on signboard*, *owner pin*, *agent-written*, or *needs confirmation*.
 2. **Category from Google's list**, not free text.
-3. **English for now**; process Hindi or Bangla if spoken, show everything in English.
+3. **Screens in English for now; the voice agent speaks English, Hindi or Bengali.** Everything written (fields, profile, posts) is in English.
 4. **Warm, plain register.** No superlatives or claims he didn't make; no keywords stuffed into the shop name.
 5. **Tool failure is not content failure.** If speech, Sarvam or Places fails, say so and ask again; never fill gaps.
 6. **Nothing acts in his name without two approvals:** the owner's (his details) and Pinwala's reviewer in AgenticOrg (what the agent wrote). Codes need a third tap from the owner.
@@ -185,7 +186,7 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | One shop end to end (landing → payment) | **At least 1, on video** | — |
 | Time from voice note to listing card | Under 15 seconds | Under 10 seconds |
 | Invented facts | Zero | Zero |
-| Languages working end to end | English | Bangla and Hindi next, then Kannada, Tamil, Telugu |
+| Languages working end to end | Voice: English, Hindi, Bengali · Screens: English | Bangla and Hindi screens, then Kannada, Tamil, Telugu |
 
 ## Business model
 
@@ -210,8 +211,11 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | Sarvam can't infer shop type from a photo | Weaker extraction | Type comes from the picker and the conversation |
 | Pine Labs checkout takes longer | "Money" requirement missing | Start by 2:15; ask the Pine Labs desk early |
 | Too few owners by 3:30 | Traction score | Send the link at 1:30 |
-| Vobiz missed call fails on the day | Fewer verified numbers | Firebase SMS code fallback; then typed number, unverified |
+| Owners ignore calls from an unknown number | Press-1 call unanswered | Screen says *"We're calling from 080 6426 9429, pick up"*; missed-call fallback one tap away |
+| Vobiz calls fail on the day | Fewer verified numbers | Firebase SMS code fallback; then typed number, unverified |
+| Outbound call cost after promo credits | Each verification billed as ≥1 minute | Rate-limit calls per number; missed-call fallback is ₹0 |
 | Answer URL not switched from the deleted test address | Every missed call fails | Point the Vobiz application at `/api/vobiz/answer` as part of item 5 |
+| Gather without `inputType="dtmf"` | Key press silently ignored | Always set it (verified in testing) |
 | Google Business Profile API needs approval | Can't publish for real | Simulated and labelled; honest in the pitch |
 
 **Open questions**
@@ -225,6 +229,6 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 1. **Hook (15 s):** "Bapi-da has sold Kolkata mishti in Koramangala for 15 years. Search 'sweet shop near me' outside his door, and he doesn't exist."
 2. **Snapshot (20 s):** "Not on Google" → photo → pin → the map fills with 12 rival pins instantly.
 3. **Voice agent (30 s):** "I can see 12 sweet shops near you. What makes yours different?" A short conversation; the summary card fills in.
-4. **Owner approves, verifies, pays (20 s):** "Yes, this is my shop" → one missed call to 080 6426 9429, ✓ verified in a second → ₹99 through Pine Labs.
+4. **Owner approves, verifies, pays (20 s):** "Yes, this is my shop" → Pinwala calls his phone, he presses 1, ✓ verified → ₹99 through Pine Labs.
 5. **Agent + human check (20 s):** the AgenticOrg agent's prepared profile appears in Approvals; Shipra approves → Bapi-da's screen (and Telegram) shows "Verification started."
 6. **Proof (15 s):** "N shop owners used it today, M paid," from the live counter.

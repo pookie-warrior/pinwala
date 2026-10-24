@@ -3,7 +3,7 @@
 Frozen: 24 Oct 2026, AI Builders Day, after the venue rules. Owner: Shipra Shreya.
 Replaces v1 (single path). **Changes after this point need an explicit decision. The build follows this file.**
 
-**Mobile-first:** one question or action per screen, big tap targets, works one-handed on 4G. English only; বাংলা and हिंदी shown as *Coming soon*. WhatsApp shown as *Coming soon*; Phone verified by a **missed call to Pinwala's Vobiz number** (no code); Telegram is optional, for one-way updates; no chat today. No login screen before he sees value.
+**Mobile-first:** one question or action per screen, big tap targets, works one-handed on 4G. **Screens in English** (বাংলা and हिंदी screens shown as *Coming soon*); **the voice agent speaks English, Hindi and Bengali**, switching to the language the owner speaks. WhatsApp shown as *Coming soon*; Phone verified by **Pinwala calling him: he answers and presses 1** (Vobiz, no code); fallback: he gives Pinwala a missed call; Telegram is optional, for one-way updates; no chat today. No login screen before he sees value.
 
 ## The journey at a glance
 
@@ -18,7 +18,7 @@ Voice agent conversation (ElevenLabs; knows the snapshot)
           ↓
 Summary → approve or edit          ← human approval 1 · counts as a "user"
           ↓
-Verify number by missed call (Vobiz, ₹0, no code) → fallback: SMS code (Firebase) → optional: Get updates on Telegram
+Verify number: Pinwala calls, press 1 (Vobiz) → fallback: missed call to Pinwala (₹0) → then SMS code (Firebase) → optional: Telegram updates
           ↓
 Sent to n8n → profile data prepared (Sarvam reads photo, ElevenLabs fields, merged)
           ↓
@@ -42,10 +42,10 @@ Telegram updates at each stage (one-way)
 | 2 | Finding an existing shop | Search by name (suggestions as he types) → "This is my shop". Alternatives: "Near me" list from GPS; paste a Maps link (with a 3-step picture guide) |
 | 3 | Location for a new shop | Same map screen: GPS pin if he's at the shop, else search a landmark/area; he drags the pin to his door and confirms |
 | 4 | When rivals appear | Right after the shop/pin is known, before the voice agent |
-| 5 | Voice agent | ElevenLabs agent, managed via AgenticOrg; given the snapshot as context at the start |
+| 5 | Voice agent | ElevenLabs agent *Pinwala Shop Interviewer* (setup: [ELEVENLABS_AGENT.md](ELEVENLABS_AGENT.md)); given the snapshot as context at the start; **English, Hindi, Bengali** with a voice per language (auto-switches); extracted fields always in English. AgenticOrg's own voice platform is not usable (server errors on Integrations/Bindings), so voice stays on ElevenLabs |
 | 6 | Agent backup (if not working by ~2 PM) | Same questions on screen, one per screen, each answered by a short voice note |
 | 7 | Photo reading | Sarvam Document AI (Extract) on the shop photo |
-| 8 | Conversation → fields | ElevenLabs agent's end-of-call field extraction |
+| 8 | Conversation → fields | ElevenLabs Data collection (10 fields, values in English); empty = not heard → *needs confirmation* |
 | 9 | Order | Fields extracted **before** approval; data goes to n8n **after** approval |
 | 10 | What counts as a user | Approved their listing (human approval 1) |
 | 11 | ₹99 for a new shop | Pinwala creates a draft profile in its own account and starts verification (simulated today) |
@@ -57,10 +57,10 @@ Telegram updates at each stage (one-way)
 | 17 | AgenticOrg agent | "Pinwala Profile Agent": takes the approved fields + snapshot (JSON) from n8n, returns the Google profile (new) or report + fixes (existing) as JSON. Gemini model; no tools |
 | 18 | AgenticOrg approval | Every run waits in AgenticOrg **Approvals** for a Pinwala reviewer (Shipra today). Approve → continue; reject with note → owner told what to fix. **First test** passing the owner's own tap to AgenticOrg's approve API (`POST /api/v1/approvals/{id}/decide`); if AgenticOrg blocks it (requester can't self-approve), keep the Pinwala reviewer |
 | 19 | Getting the result back | AgenticOrg can't call us back, so n8n checks the run status every few seconds until it's approved or rejected |
-| 20 | Phone verification | **No login screen. Missed call via Vobiz** at step 5, after approval: he types his number → taps **Give a missed call** (opens the dialer with `080 6426 9429`) → our server gets the caller's number while it rings, rejects the call (₹0, never answered) → app shows ✓ verified in ~1–2 s. **Tested 24 Oct with two different phones: works.** Fallback if Vobiz fails: **SMS code via Firebase**. Last resort: typed number, *unverified* (can still pay; flagged in AgenticOrg review) |
+| 20 | Phone verification | **No login screen.** At step 5, after approval. **Main: Pinwala calls, press 1** (Vobiz outbound): he types his number → taps **Call me to verify** → Pinwala calls from `080 6426 9429` → *"Hello, this is Pinwala. Press 1 to confirm this is your number."* → he presses 1 → ✓ verified. **Tested 24 Oct: works** (`Digits: 1` received; ~12 s call, billed as 1 minute). **Fallback: missed call to Pinwala** (inbound): **Give a missed call** opens his dialer with `080 6426 9429`; rejected while ringing, ₹0. **Tested 24 Oct with two phones: works.** Then **SMS code via Firebase**. Last resort: typed number, *unverified* (can still pay; flagged in AgenticOrg review) |
 | 21 | Telegram | **Optional**, not used for verification: *"Get updates on Telegram"* one tap after verifying |
 | 22 | Returning users | No phone login today; the same phone number on the same device resumes progress (kept 24 h) |
-| 23 | Vobiz setup | Number **+91 80 6426 9429** (purchased with promo credits) attached to XML Application *Pinwala missed call test*. Its answer URL must point to our app (e.g. `https://pinwaala.replit.app/api/vobiz/answer`); the old test address is deleted |
+| 23 | Vobiz setup | Number **+91 80 6426 9429** (purchased with promo credits) attached to XML Application *Pinwala missed call test* (inbound). Its answer URL must point to our app (e.g. `https://pinwaala.replit.app/api/vobiz/answer`); test addresses are deleted. Outbound calls are placed by API with the account's Auth ID + Token (in `.env`, never in git) |
 
 **Defaults assumed (change if wrong):** rivals snapshot is called straight from the web app, not n8n (speed); agent asks about 6 questions, 3 minutes max; photo required for new shops, optional for existing; Gmail required for new shops, optional for existing; data stored in Supabase.
 
@@ -107,11 +107,14 @@ Telegram updates at each stage (one-way)
 - Must be confirmed: name, type of shop, pin, phone, hours
 - Contact: owner's name, **Gmail** (*"the one on your phone: Settings → Google"*)
 - After **Yes, this is my shop**: **Verify your number**
-  1. He types his 10-digit number
-  2. *"Give a missed call from this number to verify. It's free, and we won't pick up."* → **Give a missed call** button (`tel:08064269429`, opens his dialer)
-  3. The call is rejected while ringing; the screen turns ✓ verified within ~2 seconds (the app checks every second for up to 2 minutes)
-  4. Calls from a different number → *"We got a call from a different number. Call from the number you typed, or change it."*
-- **Didn't work in 2 minutes?** → **Send me an SMS code instead** (Firebase) → 6-digit code
+  1. He types his 10-digit number → taps **Call me to verify**
+  2. Screen: *"We're calling you now from 080 6426 9429. Pick up and press 1."*
+  3. His phone rings; he answers and hears *"Hello, this is Pinwala. Press 1 to confirm this is your number."*
+  4. He presses **1** → hears *"Thank you, your number is verified"* → the screen turns ✓ verified (the app checks every second)
+- **Missed the call, pressed another key, or it went to voicemail?** → screen offers **Call me again** or **Give us a missed call instead**:
+  - *"Give a missed call from this number to verify. It's free, and we won't pick up."* → button opens his dialer with `080 6426 9429` → rejected while ringing → ✓ verified
+  - A call from a different number → *"We got a call from a different number. Call from the number you typed, or change it."*
+- **Still not verified?** → **Send me an SMS code instead** (Firebase) → 6-digit code
 - **Still stuck?** → continue with the typed number, marked *unverified*
 - Optional: **Get updates on Telegram** (one tap); WhatsApp: *coming soon*
 - Consent line: *"I own or run this shop and allow Pinwala to set up its Google profile."*
@@ -194,16 +197,18 @@ Telegram updates at each stage (one-way)
 | Payment fails | Retry; nothing unlocked |
 | Reviewer rejects | Owner gets the note; fixes in the app; resubmits (no new payment) |
 | Review takes long | App shows *"checking"*; Telegram update when done if connected |
-| No Telegram | Nothing lost: verification is by missed call; progress shows in the app |
+| No Telegram | Nothing lost: verification is by phone call; progress shows in the app |
+| Doesn't answer our call / voicemail / presses another key | Offer **Call me again** or the missed-call fallback |
 | Missed call from a different number | Not verified; asked to call from the typed number or change it |
-| No missed call within 2 minutes | Offer the SMS code (Firebase); then continue unverified |
+| Neither call works within ~2 minutes | Offer the SMS code (Firebase); then continue unverified |
 | Vobiz down | SMS code (Firebase) |
+| Too many "call me" taps | Max 3 calls per number per 10 minutes (each outbound call is billed as at least 1 minute) |
 | Shares a different number than the shop's | Fine: the shop phone for Google stays as he confirmed it; the shared number is his contact |
 | Leaves halfway | Progress kept on the phone for 24 hours |
 
 ## Data
 
-- **Stored:** photo, fields, pin, Google place ID, owner name, phone (+ verified flag and method: missed call / SMS / unverified), Telegram user id (if connected), Gmail, consent, referrer, payment status, Telegram link
+- **Stored:** photo, fields, pin, Google place ID, owner name, phone (+ verified flag and method: press-1 call / missed call / SMS / unverified), Telegram user id (if connected), Gmail, consent, referrer, payment status, Telegram link
 - **Not stored after processing:** raw audio
 - **Never stored or logged:** verification codes
 

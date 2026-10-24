@@ -1,0 +1,54 @@
+:root {
+  --lacquer: #0F2A24; --lacquer-2: #17392F; --ivory: #F6F0E4; --marigold: #E8A33D;
+  --ink: #1D2421; --slate: #7C8A86; --line: #E2D9C6; --ok: #2F7D5B; --warn: #B4691F;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100dvh; background: var(--lacquer); color: var(--ivory);
+  font: 17px/1.5 "Anek Latin", system-ui, sans-serif; display: flex; flex-direction: column; }
+.bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; }
+.logo { font: 600 20px "Fraunces", serif; letter-spacing: .2px; }
+.count { font-size: 13px; color: var(--marigold); }
+main { flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 8px 16px 24px; }
+.foot { text-align: center; font-size: 12px; color: #9FB3AC; padding: 12px 16px 20px; }
+h1 { font: 600 30px/1.15 "Fraunces", serif; margin: 18px 0 10px; }
+h2 { font: 600 22px/1.2 "Fraunces", serif; margin: 6px 0 12px; }
+p.lead { color: #CFDDD7; margin: 0 0 20px; }
+.card { background: var(--ivory); color: var(--ink); border-radius: 18px; padding: 18px;
+  margin: 12px 0; background-image: linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%); }
+.btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 16px; margin: 10px 0;
+  font: 600 18px "Anek Latin", sans-serif; cursor: pointer; text-align: center; text-decoration: none; }
+.btn.primary { background: var(--marigold); color: var(--ink); }
+.btn.ghost { background: transparent; color: var(--ivory); border: 1.5px solid #3C5B51; }
+.btn.dark { background: var(--lacquer); color: var(--ivory); }
+.btn:disabled { opacity: .5; }
+.langs { display: flex; gap: 8px; margin: 6px 0 18px; flex-wrap: wrap; }
+.chip { font-size: 14px; padding: 6px 12px; border-radius: 999px; border: 1px solid #3C5B51; color: #CFDDD7; }
+.chip.on { background: var(--marigold); color: var(--ink); border-color: var(--marigold); }
+.chip.soon { opacity: .55; }
+input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif; border-radius: 12px;
+  border: 1.5px solid var(--line); background: #fff; color: var(--ink); }
+.list { list-style: none; padding: 0; margin: 8px 0; }
+.list li { padding: 12px 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.list li:active { background: #EFE6D3; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.grid button { padding: 14px 8px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff;
+  font: 500 16px "Anek Latin", sans-serif; color: var(--ink); }
+.grid button.on { border-color: var(--marigold); background: #FCEFD8; }
+.big { font: 600 44px/1 "Fraunces", serif; color: var(--marigold); }
+.muted { color: var(--slate); font-size: 14px; }
+.map { position: relative; height: 220px; border-radius: 14px; background: #E8DFCC; overflow: hidden; margin: 10px 0; }
+.pin { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--slate);
+  transform: translate(-50%, -50%); border: 2px solid #fff; }
+.pin.me { width: 22px; height: 22px; background: var(--marigold); z-index: 2; animation: drop .5s ease-out; }
+@keyframes drop { from { transform: translate(-50%, -160%); opacity: 0 } to { transform: translate(-50%, -50%); opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .pin.me { animation: none; } }
+.row { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row b { font-weight: 600; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #E6EFE9; color: var(--ok); white-space: nowrap; }
+.tag.warn { background: #FBE9D4; color: var(--warn); }
+.orb { width: 140px; height: 140px; border-radius: 50%; margin: 24px auto; background: var(--marigold);
+  box-shadow: 0 0 0 0 rgba(232,163,61,.5); }
+.orb.live { animation: pulse 1.6s ease-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(232,163,61,.55) } 100% { box-shadow: 0 0 0 28px rgba(232,163,61,0) } }
+.center { text-align: center; }
+.err { color: #F2B8A0; font-size: 14px; }
