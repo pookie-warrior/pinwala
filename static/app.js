@@ -217,13 +217,25 @@ function done(verified) {
     <div class="card">
       <div class="row"><span>Your details</span><span class="tag">approved by you</span></div>
       <div class="row"><span>Phone</span><span class="tag">${verified ? "verified ✓" : "unverified"}</span></div>
-      <div class="row"><span>Google profile</span><span class="tag warn">being prepared by our AgenticOrg agent</span></div>
+      <div class="row"><span>Google profile</span><span class="tag warn" id="ao">sending to our AgenticOrg agent…</span></div>
       <div class="row"><span>Human check</span><span class="tag warn">a Pinwala reviewer approves before anything goes out</span></div>
       <h2 style="margin-top:16px">Listing Pack · ₹99</h2>
       <p class="muted">Google profile set up + verification, 3 posts, review QR card for your counter.</p>
       <button class="btn primary" disabled>Pay ₹99 with Pine Labs · coming soon</button>
       ${S.place ? `<a class="btn dark" href="${esc(S.place.review_link)}" target="_blank" rel="noopener">Open your Google review link</a>` : ""}
       <p class="muted">Updates on Telegram and WhatsApp: coming soon.</p></div>`);
+  pollReview();
+}
+
+async function pollReview() {
+  const el = document.getElementById("ao");
+  for (let i = 0; i < 40 && S.recordId; i++) {
+    const r = await api(`/api/review/${S.recordId}`);
+    if (r.status === "hitl_triggered") { el.textContent = `prepared · waiting for Pinwala reviewer (ref ${r.correlation_id})`; return; }
+    if (r.status === "completed") { el.textContent = "prepared and approved"; el.classList.remove("warn"); return; }
+    if (r.status === "failed") { el.textContent = "queued for manual preparation"; return; }
+    await new Promise((ok) => setTimeout(ok, 1500));
+  }
 }
 
 boot();

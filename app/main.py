@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import threading
 import logging
 import math
 import os
@@ -28,13 +29,16 @@ SHOPS = DATA / "shops.jsonl"
 
 AGENT_ID = os.getenv("ELEVENLABS_AGENT_ID", "agent_8901m5pps90see9ryvcw36zjwzf9")
 VOBIZ_FROM = os.getenv("VOBIZ_NUMBER", "918064269429")
-KEYS = ("GOOGLE_PLACES_API_KEY", "ELEVENLABS_API_KEY", "VOBIZ_AUTH_ID", "VOBIZ_AUTH_TOKEN")
+KEYS = ("GOOGLE_PLACES_API_KEY", "ELEVENLABS_API_KEY", "VOBIZ_AUTH_ID", "VOBIZ_AUTH_TOKEN", "AGENTICORG_API_KEY")
+AO_BASE = os.getenv("AGENTICORG_BASE_URL", "https://agenticorg.hackathon.pinelabs.com")
+AO_AGENT = os.getenv("AGENTICORG_AGENT_ID", "a64642fd-f0a9-4ad7-badd-dda53fccd4ce")
 
 SHOP_TYPES = {"Sweets": "sweet shop", "Grocery": "grocery store", "Bakery": "bakery", "Salon": "beauty salon",
               "Tailor": "tailor", "Medical": "pharmacy", "Restaurant": "restaurant", "Other": "shop"}
 
 app = FastAPI(title="Pinwala")
 verifications: dict[str, dict] = {}
+reviews: dict[str, dict] = {}
 
 
 # ------------------------------------------------------------------ helpers
@@ -147,7 +151,35 @@ async def approve(req: Request):
     body = await req.json()
     rec = {"id": uuid.uuid4().hex[:10], "at": time.strftime("%Y-%m-%d %H:%M:%S"), **body}
     save(rec)
+    reviews[rec["id"]] = {"status": "sending"}
+    threading.Thread(target=send_to_agenticorg, args=(rec,), daemon=True).start()
     return {"ok": True, "id": rec["id"]}
+
+
+def send_to_agenticorg(rec: dict):
+    """Pinwala Profile Agent on AgenticOrg; every run stops for human approval (hitl_triggered)."""
+    f = rec.get("fields") or {}
+    shop = {"shop_type": rec.get("kind"), "heard": {k: v for k, v in f.items() if v},
+            "signboard": None, "pin": {"lat": rec.get("lat"), "lng": rec.get("lng")},
+            "existing_listing": {"place_id": rec.get("place_id")} if rec.get("listed") else None,
+            "rivals": rec.get("rivals"), "rivals_within_1km": rec.get("rival_count"),
+            "owner_name": rec.get("owner") or None}
+    task = "Prepare the Google Business Profile for this shop. Input JSON:\n" + json.dumps(shop, ensure_ascii=False)
+    st, d = http("POST", f"{AO_BASE}/api/v1/agents/{AO_AGENT}/run",
+                 {"action": "process", "inputs": {"task": task}, "context": {"pinwala_id": rec["id"]}},
+                 {"Authorization": f"Bearer {os.getenv('AGENTICORG_API_KEY', '')}"}, timeout=120)
+    if st != 200:
+        log.warning("agenticorg run failed %s %s", st, d)
+        reviews[rec["id"]] = {"status": "failed"}
+        return
+    reviews[rec["id"]] = {"status": d.get("status"), "confidence": d.get("confidence"),
+                          "correlation_id": d.get("correlation_id")}
+    log.info("agenticorg %s -> %s %s", rec["id"], d.get("status"), d.get("correlation_id"))
+
+
+@app.get("/api/review/{rid}")
+def review(rid: str):
+    return reviews.get(rid, {"status": "unknown"})
 
 
 @app.post("/api/verify/call")
