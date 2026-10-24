@@ -4,6 +4,7 @@ Updated 24 Oct 2026, at the venue. The build continues in Shipra's **personal** 
 
 ## Where things stand
 
+- **Live URL:** https://pinwaala.replit.app (deploying)
 - **Folder:** `~/Pinwala` · **Repo:** [pookie-warrior/pinwala](https://github.com/pookie-warrior/pinwala) (private). The remote is tied to the pookie-warrior account, so pushes work even while the GitHub CLI's active account is Shushi-1427.
 - **Planning is frozen:** PRD (scope, timeline, architecture) and User Journey v2. Build from those.
 - **Code:** only last night's placeholder (FastAPI health check + one static page) plus test scripts. Nothing from the journey is built yet.
@@ -16,7 +17,8 @@ Updated 24 Oct 2026, at the venue. The build continues in Shipra's **personal** 
 - **Instant rivals snapshot** from Google Places, before the voice agent.
 - **ElevenLabs voice agent** (~6 questions, given the snapshot). 2:00 PM go/no-go; backup is on-screen questions answered by voice notes.
 - **Sarvam Document AI** reads the shop photo; **n8n Cloud** merges everything.
-- **Owner approves** his details (approval 1, counts as a user) → **₹99 Pine Labs** → connects **Telegram** (one-way updates).
+- **Owner approves** his details (approval 1, counts as a user) → **verifies his phone by a missed call** to Pinwala's Vobiz number `+91 80 6426 9429` (tested 24 Oct, works, ₹0; Firebase SMS fallback) → **₹99 Pine Labs**. Telegram is optional, for updates.
+- **Vobiz:** the XML Application *Pinwala missed call test* still points at a deleted test address; switch its answer URL to `https://pinwaala.replit.app/api/vobiz/answer` when that endpoint exists.
 - **AgenticOrg "Pinwala Profile Agent"** prepares the profile / fixes pack → **Pinwala reviewer approves in AgenticOrg** (approval 2). First test whether the owner's tap can be passed to AgenticOrg's approve API instead.
 - **New shops:** draft → verification code entered in the app (approval 3) → live → ownership invite to his Gmail, **all simulated today**. **Existing shops:** report + fixes released.
 
@@ -25,7 +27,7 @@ Updated 24 Oct 2026, at the venue. The build continues in Shipra's **personal** 
 1. **Organisers (now):** AgenticOrg login or invite (don't create a second organisation), confirm hackathon use is covered by AgenticOrg's licence, confirm API keys + Approvals are enabled. Ask the Pine Labs desk for checkout credentials and a sample.
 2. **AgenticOrg:** add a Gemini key under Settings → AI credentials; create an API key (Settings → API Keys); create the Pinwala Profile Agent (setup steps in the PRD's architecture section).
 3. **Replit:** import the repo, add Secrets, get the public URL (see README → Deploy).
-4. **Keys:** Google Places (own key, or confirm Replit's Maps connector covers Places API (New)), ElevenLabs, Sarvam, Telegram bot token (@BotFather), Supabase project, n8n Cloud (check the personal account's n8n connector points to the Cloud trial, not `auto.snowfig.com`).
+4. **Keys:** Firebase project with phone sign-in (SMS fallback; add `pinwaala.replit.app` as an authorised domain), Google Places (own key, or confirm Replit's Maps connector covers Places API (New)), ElevenLabs, Sarvam, Telegram bot token (@BotFather), Supabase project, n8n Cloud (check the personal account's n8n connector points to the Cloud trial, not `auto.snowfig.com`).
 5. **Sarvam photo test:** 2–3 real signboard photos through Document AI Extract, to see whether it can tell the type of shop.
 6. **Build** in the PRD's order; send the link to shop owners at 1:30.
 

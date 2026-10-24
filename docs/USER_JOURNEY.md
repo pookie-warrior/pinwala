@@ -3,7 +3,7 @@
 Frozen: 24 Oct 2026, AI Builders Day, after the venue rules. Owner: Shipra Shreya.
 Replaces v1 (single path). **Changes after this point need an explicit decision. The build follows this file.**
 
-**Mobile-first:** one question or action per screen, big tap targets, works one-handed on 4G. English only; বাংলা and हिंदी shown as *Coming soon*. WhatsApp shown as *Coming soon*; Telegram verifies his phone number (contact share, no code) and sends one-way updates; no chat today. No login screen before he sees value.
+**Mobile-first:** one question or action per screen, big tap targets, works one-handed on 4G. English only; বাংলা and हिंदी shown as *Coming soon*. WhatsApp shown as *Coming soon*; Phone verified by a **missed call to Pinwala's Vobiz number** (no code); Telegram is optional, for one-way updates; no chat today. No login screen before he sees value.
 
 ## The journey at a glance
 
@@ -18,7 +18,7 @@ Voice agent conversation (ElevenLabs; knows the snapshot)
           ↓
 Summary → approve or edit          ← human approval 1 · counts as a "user"
           ↓
-Verify number on Telegram (share contact) → also connects updates · no Telegram → typed, unverified
+Verify number by missed call (Vobiz, ₹0, no code) → fallback: SMS code (Firebase) → optional: Get updates on Telegram
           ↓
 Sent to n8n → profile data prepared (Sarvam reads photo, ElevenLabs fields, merged)
           ↓
@@ -57,9 +57,10 @@ Telegram updates at each stage (one-way)
 | 17 | AgenticOrg agent | "Pinwala Profile Agent": takes the approved fields + snapshot (JSON) from n8n, returns the Google profile (new) or report + fixes (existing) as JSON. Gemini model; no tools |
 | 18 | AgenticOrg approval | Every run waits in AgenticOrg **Approvals** for a Pinwala reviewer (Shipra today). Approve → continue; reject with note → owner told what to fix. **First test** passing the owner's own tap to AgenticOrg's approve API (`POST /api/v1/approvals/{id}/decide`); if AgenticOrg blocks it (requester can't self-approve), keep the Pinwala reviewer |
 | 19 | Getting the result back | AgenticOrg can't call us back, so n8n checks the run status every few seconds until it's approved or rejected |
-| 20 | Phone verification | **No login screen.** At step 5, after approval: **Verify your number on Telegram** → bot → **Share phone number** (Telegram's own verified number, no code). The same tap connects Telegram updates. No Telegram → typed number, marked *unverified* (can still pay; flagged in AgenticOrg review) |
-| 21 | SMS / call codes via Vobiz | Not today. SMS codes in India need DLT-registered templates (days). Voice-call codes only if the Vobiz desk confirms they work without registration (stretch) |
-| 22 | Returning users | No phone login today; a "continue where you left off" link is sent on Telegram |
+| 20 | Phone verification | **No login screen. Missed call via Vobiz** at step 5, after approval: he types his number → taps **Give a missed call** (opens the dialer with `080 6426 9429`) → our server gets the caller's number while it rings, rejects the call (₹0, never answered) → app shows ✓ verified in ~1–2 s. **Tested 24 Oct with two different phones: works.** Fallback if Vobiz fails: **SMS code via Firebase**. Last resort: typed number, *unverified* (can still pay; flagged in AgenticOrg review) |
+| 21 | Telegram | **Optional**, not used for verification: *"Get updates on Telegram"* one tap after verifying |
+| 22 | Returning users | No phone login today; the same phone number on the same device resumes progress (kept 24 h) |
+| 23 | Vobiz setup | Number **+91 80 6426 9429** (purchased with promo credits) attached to XML Application *Pinwala missed call test*. Its answer URL must point to our app (e.g. `https://pinwaala.replit.app/api/vobiz/answer`); the old test address is deleted |
 
 **Defaults assumed (change if wrong):** rivals snapshot is called straight from the web app, not n8n (speed); agent asks about 6 questions, 3 minutes max; photo required for new shops, optional for existing; Gmail required for new shops, optional for existing; data stored in Supabase.
 
@@ -105,8 +106,14 @@ Telegram updates at each stage (one-way)
 - Tap any field to edit
 - Must be confirmed: name, type of shop, pin, phone, hours
 - Contact: owner's name, **Gmail** (*"the one on your phone: Settings → Google"*)
-- After **Yes, this is my shop**: **Verify your number on Telegram** (one tap) → Pinwala bot opens → **Share phone number** → back in the app, phone ✓ verified and Telegram updates connected
-- **No Telegram?** → type the number → marked *unverified*; WhatsApp: *coming soon*
+- After **Yes, this is my shop**: **Verify your number**
+  1. He types his 10-digit number
+  2. *"Give a missed call from this number to verify. It's free, and we won't pick up."* → **Give a missed call** button (`tel:08064269429`, opens his dialer)
+  3. The call is rejected while ringing; the screen turns ✓ verified within ~2 seconds (the app checks every second for up to 2 minutes)
+  4. Calls from a different number → *"We got a call from a different number. Call from the number you typed, or change it."*
+- **Didn't work in 2 minutes?** → **Send me an SMS code instead** (Firebase) → 6-digit code
+- **Still stuck?** → continue with the typed number, marked *unverified*
+- Optional: **Get updates on Telegram** (one tap); WhatsApp: *coming soon*
 - Consent line: *"I own or run this shop and allow Pinwala to set up its Google profile."*
 - **Yes, this is my shop** → counted as a user
 
@@ -119,7 +126,7 @@ Telegram updates at each stage (one-way)
 
 | **What we found** | **What we'll do** | **What you get for ₹99** |
 | --- | --- | --- |
-| New: *"12 rivals nearby; you're invisible"* · Existing: *"#5 of 12 by reviews; 3 of 7 basics missing"* | Preview of his profile card + top 3 fixes | New: Google profile created + verification + 3 posts + review QR. Existing: full report + written fixes + 3 posts + review QR. Both: updates on Telegram |
+| New: *"12 rivals nearby; you're invisible"* · Existing: *"#5 of 12 by reviews; 3 of 7 basics missing"* | Preview of his profile card + top 3 fixes | New: Google profile created + verification + 3 posts + review QR. Existing: full report + written fixes + 3 posts + review QR. Both: updates in the app (and on Telegram if connected) |
 
 - Button: **Unlock for ₹99**
 - Small print: *"If Google can't verify your shop, we refund or credit your ₹99."*
@@ -130,7 +137,7 @@ Telegram updates at each stage (one-way)
 
 ### 8b. Agent prepares + Pinwala review (human approval 2)
 
-- Right after payment, the screen shows *"Our team is checking your profile. We'll message you on Telegram in a few minutes."* (unverified users: *"Check back here in a few minutes"*)
+- Right after payment, the screen shows *"Our team is checking your profile. We'll update this page (and Telegram, if connected) in a few minutes."*
 - n8n sends the approved data to the AgenticOrg agent → the run waits in **AgenticOrg Approvals**
 - The reviewer sees one item per shop, e.g. **"Submit Google profile: Bapi Sweets, Koramangala"**, with each field, its source (signboard / voice / owner pin / agent-written) and mismatches highlighted; plus *owner approved ✓ · paid ✓ · phone verified ✓/✗ · Gmail*
 - **Reviewer checklist (~30 s):**
@@ -138,7 +145,7 @@ Telegram updates at each stage (one-way)
   2. Matches what he said? Name, phone, hours agree with voice + signboard; mismatches fixed first
   3. Agent's writing safe and true? No invented claims or superlatives, right category, nothing offensive
   4. Follows Google's rules? No keywords stuffed in the name, one profile per shop
-- **Approve** → continue to 9a / 9b · **Reject with note** → owner gets the note on Telegram and in the app (e.g. *"Please confirm your phone number"*); nothing is sent
+- **Approve** → continue to 9a / 9b · **Reject with note** → owner gets the note in the app (and on Telegram if connected) (e.g. *"Please confirm your phone number"*); nothing is sent
 - Existing shops: the reviewer approves the report + fixes before they're released
 
 ### 9a. After payment: new shop (simulated today)
@@ -156,7 +163,7 @@ Telegram updates at each stage (one-way)
 
 ### 10. Telegram updates
 
-- Connected in step 5 (phone verification) → one-way messages: continue-where-you-left-off link · payment received · being checked by our team · approved, verification started (or: *please fix X*) · live · ownership invite sent
+- Optional, connected at step 5 → one-way messages (the app shows the same progress for everyone): continue-where-you-left-off link · payment received · being checked by our team · approved, verification started (or: *please fix X*) · live · ownership invite sent
 - WhatsApp: *coming soon*
 
 ## Inputs
@@ -186,14 +193,17 @@ Telegram updates at each stage (one-way)
 | No Gmail | Show how to find it on his phone; allow "add later" (ownership invite waits) |
 | Payment fails | Retry; nothing unlocked |
 | Reviewer rejects | Owner gets the note; fixes in the app; resubmits (no new payment) |
-| Review takes long | Telegram update when done; app shows *"checking"* |
-| No Telegram | Typed number, *unverified*; progress shown in the app instead of Telegram |
+| Review takes long | App shows *"checking"*; Telegram update when done if connected |
+| No Telegram | Nothing lost: verification is by missed call; progress shows in the app |
+| Missed call from a different number | Not verified; asked to call from the typed number or change it |
+| No missed call within 2 minutes | Offer the SMS code (Firebase); then continue unverified |
+| Vobiz down | SMS code (Firebase) |
 | Shares a different number than the shop's | Fine: the shop phone for Google stays as he confirmed it; the shared number is his contact |
 | Leaves halfway | Progress kept on the phone for 24 hours |
 
 ## Data
 
-- **Stored:** photo, fields, pin, Google place ID, owner name, phone (+ verified flag), Telegram user id, Gmail, consent, referrer, payment status, Telegram link
+- **Stored:** photo, fields, pin, Google place ID, owner name, phone (+ verified flag and method: missed call / SMS / unverified), Telegram user id (if connected), Gmail, consent, referrer, payment status, Telegram link
 - **Not stored after processing:** raw audio
 - **Never stored or logged:** verification codes
 

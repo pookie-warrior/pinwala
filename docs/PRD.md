@@ -18,7 +18,7 @@ Pinwala turns one photo and one voice note into a ready Google listing and posts
 | **Track 2 deliverable:** "One order, end to end": a real customer from first message to payment or signup | One real shop owner going landing page → listing → ₹99 payment |
 | Judging, round 1 (table): Problem & Insight 25 · Ambition 15 · Agentic Depth 15 · **Traction 25** · Demo & Polish 20 | Users are worth as much as the problem; start sharing the link early |
 | Judging, round 2 (top 10 on stage, 7:00): 20 · 20 · 20 · **Traction 30** · 10 | |
-| Credits: AgenticOrg (required), Replit, ElevenLabs + Vobiz, Pine Labs, Render, Greptile | Replit for hosting; ElevenLabs available for voice later |
+| Credits: AgenticOrg (required), Replit, ElevenLabs + Vobiz, Pine Labs, Render, Greptile | Replit for hosting; ElevenLabs for the voice agent; **Vobiz for missed-call phone verification** |
 | "Who owns what we build? You do." | Pinwala is Shipra's |
 
 ## Name: Pinwala
@@ -69,14 +69,14 @@ Out of scope for now: chains, businesses with no shopfront, ads management.
 | 2 | **Find my shop** (search by name / near me / paste link) and **photo + pin** for new shops, on one map screen | 2a, 2b | Real |
 | 3 | **Instant rivals snapshot** from Google Places (map + numbers / scorecard) | 3 | Real |
 | 4 | **ElevenLabs voice agent** (~6 questions, knows the snapshot) + field extraction; Sarvam Document AI reads the photo | 4 | Real (backup: on-screen questions + voice notes) |
-| 5 | **Summary → owner approves** (human approval 1) + Gmail, consent + **phone verified via Telegram contact share** (also connects updates) | 5 | Real |
+| 5 | **Summary → owner approves** (human approval 1) + Gmail, consent + **phone verified by missed call to Pinwala's Vobiz number** (SMS code via Firebase as fallback; Telegram optional for updates) | 5 | Real |
 | 6 | **n8n** merges everything into profile data; **outcome screen** (3 tiles) | 6–7 | Real |
 | 7 | **₹99 Pine Labs checkout** | 8 | **Real payment** |
 | 8 | **AgenticOrg Pinwala Profile Agent** prepares the profile / fixes pack → **Pinwala reviewer approves in AgenticOrg** (human approval 2) | 8b | Real agent + real approval |
 | 9 | **After approval:** new shop → verification code in app (approval 3) → live → ownership invite (**simulated**); existing shop → report + fixes released | 9a, 9b | Google steps simulated |
-| 10 | **Telegram one-way updates** at each stage | 10 | Real |
+| 10 | **Progress updates** in the app at each stage; Telegram too if connected | 10 | Real |
 
-**Not today:** বাংলা/हिंदी, WhatsApp, two-way Telegram chat, login screen / phone login, SMS codes (India DLT registration), Vobiz calls (voice-call codes only as a stretch), QR posters, real Google publishing, Rival Watch heatmap, weekly posts.
+**Not today:** বাংলা/हिंदी, WhatsApp, two-way Telegram chat, login screen / phone login, SMS through Vobiz (India DLT registration), voice-call codes, QR posters, real Google publishing, Rival Watch heatmap, weekly posts.
 
 **Cut order if behind:** item 4 falls back to on-screen questions + voice notes (decided at 2 PM); item 9 shows the simulated steps as one screen instead of animated stages; item 3 for existing shops shows numbers without the map. Items 5, 7, 8 are the hackathon requirements and never get cut.
 
@@ -138,7 +138,7 @@ The web app on Replit is what the owner sees. Keys stay on servers, never on the
 Owner's phone (web app on Replit, mobile-first)
   ├─ Google Places ── find his shop / rivals snapshot (called from the web app, for speed)
   ├─ ElevenLabs voice agent (their web SDK in our page) ── conversation + extracted fields
-  ├─ owner approves (1) → verify phone on Telegram (contact share) → Pine Labs checkout ₹99
+  ├─ owner approves (1) → verify phone by missed call (Vobiz → /api/vobiz/answer) → Pine Labs checkout ₹99
   ▼
 n8n Cloud
   ├─ Sarvam Document AI (Extract) ── reads the shop photo (async: submit, poll, fetch)
@@ -159,7 +159,8 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | Orchestration | n8n Cloud trial | Separate from Beacon |
 | Agent + approval | AgenticOrg | No ElevenLabs/Vobiz integration exists; agent is text-in/JSON-out. API key from Settings → API Keys (admin only). Python SDK `client.agents.run(...)` → `status`, `output`. No callbacks: poll |
 | Payment | Pine Labs checkout + confirmation | |
-| Phone verification + updates | Telegram bot: "Share phone number" button returns his Telegram-verified number; then one-way updates | No code needed; no Telegram → typed, unverified |
+| Phone verification | **Missed call to +91 80 6426 9429 (Vobiz).** XML Application answer URL → `POST /api/vobiz/answer` on our app. On `Event=StartApp` (ringing), match `From` (format `91XXXXXXXXXX`, no `+`; match on last 10 digits) to the pending number, mark verified, reply `<Response><Hangup/></Response>` → call rejected unanswered, ₹0 (tested 24 Oct with two phones). Ignore the `Hangup` event. Fallback: Firebase phone sign-in (SMS code) | The app checks verification status every second for up to 2 minutes |
+| Updates | Telegram bot, optional, one-way | |
 | Data | Supabase | |
 
 **AgenticOrg agent setup:** Agents → Create Virtual Employee → Persona *Pinwala Profile Agent* → Prompt (prepare Google profile or report + fixes from JSON; return JSON only; never invent; mark missing fields *needs_confirmation*) → Behavior: Gemini, no tools, approval required on every run → create in test mode, test, promote.
@@ -209,7 +210,8 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | Sarvam can't infer shop type from a photo | Weaker extraction | Type comes from the picker and the conversation |
 | Pine Labs checkout takes longer | "Money" requirement missing | Start by 2:15; ask the Pine Labs desk early |
 | Too few owners by 3:30 | Traction score | Send the link at 1:30 |
-| Owners without Telegram | Fewer verified numbers, no updates | Typed number allowed (unverified); progress shown in the app |
+| Vobiz missed call fails on the day | Fewer verified numbers | Firebase SMS code fallback; then typed number, unverified |
+| Answer URL not switched from the deleted test address | Every missed call fails | Point the Vobiz application at `/api/vobiz/answer` as part of item 5 |
 | Google Business Profile API needs approval | Can't publish for real | Simulated and labelled; honest in the pitch |
 
 **Open questions**
@@ -223,6 +225,6 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 1. **Hook (15 s):** "Bapi-da has sold Kolkata mishti in Koramangala for 15 years. Search 'sweet shop near me' outside his door, and he doesn't exist."
 2. **Snapshot (20 s):** "Not on Google" → photo → pin → the map fills with 12 rival pins instantly.
 3. **Voice agent (30 s):** "I can see 12 sweet shops near you. What makes yours different?" A short conversation; the summary card fills in.
-4. **Owner approves + pays (20 s):** "Yes, this is my shop" → ₹99 through Pine Labs.
-5. **Agent + human check (20 s):** the AgenticOrg agent's prepared profile appears in Approvals; Shipra approves → Bapi-da's phone buzzes on Telegram: "Verification started."
+4. **Owner approves, verifies, pays (20 s):** "Yes, this is my shop" → one missed call to 080 6426 9429, ✓ verified in a second → ₹99 through Pine Labs.
+5. **Agent + human check (20 s):** the AgenticOrg agent's prepared profile appears in Approvals; Shipra approves → Bapi-da's screen (and Telegram) shows "Verification started."
 6. **Proof (15 s):** "N shop owners used it today, M paid," from the live counter.
