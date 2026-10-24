@@ -69,14 +69,14 @@ Out of scope for now: chains, businesses with no shopfront, ads management.
 | 2 | **Find my shop** (search by name / near me / paste link) and **photo + pin** for new shops, on one map screen | 2a, 2b | Real |
 | 3 | **Instant rivals snapshot** from Google Places (map + numbers / scorecard) | 3 | Real |
 | 4 | **ElevenLabs voice agent** (~6 questions, knows the snapshot) + field extraction; Sarvam Document AI reads the photo | 4 | Real (backup: on-screen questions + voice notes) |
-| 5 | **Summary → owner approves** (human approval 1) + contact, Gmail, consent | 5 | Real |
+| 5 | **Summary → owner approves** (human approval 1) + Gmail, consent + **phone verified via Telegram contact share** (also connects updates) | 5 | Real |
 | 6 | **n8n** merges everything into profile data; **outcome screen** (3 tiles) | 6–7 | Real |
-| 7 | **₹99 Pine Labs checkout** + Telegram connect | 8, 8b | **Real payment** |
+| 7 | **₹99 Pine Labs checkout** | 8 | **Real payment** |
 | 8 | **AgenticOrg Pinwala Profile Agent** prepares the profile / fixes pack → **Pinwala reviewer approves in AgenticOrg** (human approval 2) | 8b | Real agent + real approval |
 | 9 | **After approval:** new shop → verification code in app (approval 3) → live → ownership invite (**simulated**); existing shop → report + fixes released | 9a, 9b | Google steps simulated |
 | 10 | **Telegram one-way updates** at each stage | 10 | Real |
 
-**Not today:** বাংলা/हिंदी, WhatsApp, two-way Telegram chat, Vobiz phone calls, QR posters, real Google publishing, Rival Watch heatmap, weekly posts.
+**Not today:** বাংলা/हिंदी, WhatsApp, two-way Telegram chat, login screen / phone login, SMS codes (India DLT registration), Vobiz calls (voice-call codes only as a stretch), QR posters, real Google publishing, Rival Watch heatmap, weekly posts.
 
 **Cut order if behind:** item 4 falls back to on-screen questions + voice notes (decided at 2 PM); item 9 shows the simulated steps as one screen instead of animated stages; item 3 for existing shops shows numbers without the map. Items 5, 7, 8 are the hackathon requirements and never get cut.
 
@@ -138,7 +138,7 @@ The web app on Replit is what the owner sees. Keys stay on servers, never on the
 Owner's phone (web app on Replit, mobile-first)
   ├─ Google Places ── find his shop / rivals snapshot (called from the web app, for speed)
   ├─ ElevenLabs voice agent (their web SDK in our page) ── conversation + extracted fields
-  ├─ owner approves (1) → Pine Labs checkout ₹99 → Telegram connect
+  ├─ owner approves (1) → verify phone on Telegram (contact share) → Pine Labs checkout ₹99
   ▼
 n8n Cloud
   ├─ Sarvam Document AI (Extract) ── reads the shop photo (async: submit, poll, fetch)
@@ -159,7 +159,7 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | Orchestration | n8n Cloud trial | Separate from Beacon |
 | Agent + approval | AgenticOrg | No ElevenLabs/Vobiz integration exists; agent is text-in/JSON-out. API key from Settings → API Keys (admin only). Python SDK `client.agents.run(...)` → `status`, `output`. No callbacks: poll |
 | Payment | Pine Labs checkout + confirmation | |
-| Updates | Telegram bot, one-way | |
+| Phone verification + updates | Telegram bot: "Share phone number" button returns his Telegram-verified number; then one-way updates | No code needed; no Telegram → typed, unverified |
 | Data | Supabase | |
 
 **AgenticOrg agent setup:** Agents → Create Virtual Employee → Persona *Pinwala Profile Agent* → Prompt (prepare Google profile or report + fixes from JSON; return JSON only; never invent; mark missing fields *needs_confirmation*) → Behavior: Gemini, no tools, approval required on every run → create in test mode, test, promote.
@@ -209,6 +209,7 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | Sarvam can't infer shop type from a photo | Weaker extraction | Type comes from the picker and the conversation |
 | Pine Labs checkout takes longer | "Money" requirement missing | Start by 2:15; ask the Pine Labs desk early |
 | Too few owners by 3:30 | Traction score | Send the link at 1:30 |
+| Owners without Telegram | Fewer verified numbers, no updates | Typed number allowed (unverified); progress shown in the app |
 | Google Business Profile API needs approval | Can't publish for real | Simulated and labelled; honest in the pitch |
 
 **Open questions**

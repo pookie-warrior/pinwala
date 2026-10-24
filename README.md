@@ -1,8 +1,26 @@
 # Pinwala
 
-A shop owner sends one photo and one voice note, in his own language, and gets back a ready Google listing, his first posts, and a voice reply in his language. Built for AI Builders Day '26 (Track 2, Commerce).
+Get your shop found on Google. A shop owner says whether he's already on Google Maps, finds his shop or drops a pin, sees his rivals instantly, talks to a voice agent for two minutes, approves the result, and pays ₹99 to have his Google profile prepared (new shops) or get a competitor report and fixes (existing shops). A Pinwala reviewer approves every profile in AgenticOrg before anything is done in the owner's name.
 
-Stack: FastAPI + vanilla JS, Docker on Render. Gemini (audio + vision), Sarvam (Indian-language speech), Google Places API (New), Twilio WhatsApp sandbox.
+Built for AI Builders Day '26, Track 2 · AI for Commerce. Repo: `pookie-warrior/pinwala` (private).
+
+**Start here:** [docs/PRD.md](docs/PRD.md) (scope, timeline, architecture) · [docs/USER_JOURNEY.md](docs/USER_JOURNEY.md) (frozen journey v2) · [docs/HANDOFF.md](docs/HANDOFF.md) (status and next steps)
+
+## Stack
+
+| Piece | Choice |
+| --- | --- |
+| Web app | Python 3.12 FastAPI + vanilla JS, mobile-first, hosted on Replit |
+| Find shop / rivals | Google Places API (New) |
+| Voice agent | ElevenLabs agent + web SDK |
+| Photo reading | Sarvam Document AI (Extract) |
+| Orchestration | n8n Cloud |
+| Agent + human approval | AgenticOrg |
+| Payment | Pine Labs checkout |
+| Updates | Telegram bot (one-way) |
+| Data | Supabase |
+
+English only for now; বাংলা, हिंदी and WhatsApp are shown as *coming soon*. Real Google profile creation is simulated until Google grants Business Profile API access.
 
 ## Run locally
 
@@ -12,24 +30,19 @@ cp .env.example .env    # then fill in keys
 .venv/bin/uvicorn app.main:app --port 8000 --reload --reload-dir app
 ```
 
-`/api/health` shows which keys are configured (true/false only).
+`/api/health` shows which keys are configured (true/false only, never values).
 
-## Night-before checks
+## Checks
 
 ```bash
 .venv/bin/python scripts/check_keys.py    # PASS/FAIL/SKIP per API
-.venv/bin/python scripts/stt_test.py      # Gemini vs Sarvam on samples/*
+.venv/bin/python scripts/stt_test.py      # speech-to-text test on samples/*
 ```
 
-## Deploy (Render)
+## Design
 
-Push to GitHub, then on Render: New → Blueprint → pick the repo (reads `render.yaml`). Fill in the secret env vars, then set `PUBLIC_BASE_URL` to the Render URL once it exists (Twilio needs it to fetch the voice reply).
+Design direction ("the jeweller's box") is in the PRD. The impeccable design skill is installed in `.claude/` (telemetry off). Its engine binary isn't in git; on a new machine run `npx impeccable install --providers=claude --scope=project`.
 
-## Build order (24 Oct)
+## Deploy
 
-1. Core flow: `/intake` takes photo + voice, returns a listing (JSON) and the Maps-style card
-2. Places check: already listed? competitors within 1 km
-3. WhatsApp via Twilio + voice reply (Sarvam Bulbul)
-4. Content Studio: posts, Instagram caption, WhatsApp Status, review replies
-5. Rival Watch / heatmap (stretch)
-6. Pine Labs receipt QR → Google review link
+Replit: import this repo from GitHub, add the keys as Replit Secrets, run `uvicorn app.main:app --host 0.0.0.0 --port 8000`, then deploy. `Dockerfile` and `render.yaml` stay as a Render fallback.

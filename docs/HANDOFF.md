@@ -1,72 +1,55 @@
-# Pinwala — handoff (24 Oct 2026, ~01:00 IST)
+# Pinwala — handoff
 
-Written at the end of the planning session in Shipra's LKS Claude account. The build continues in her **personal** Claude account (LKS doesn't allow custom connectors), so that session starts with none of this history. Read this file and [PRD.md](PRD.md) first.
+Updated 24 Oct 2026, at the venue. The build continues in Shipra's **personal** Claude account (LKS doesn't allow custom connectors), so that session starts with none of the planning history. Read this file, then [PRD.md](PRD.md) and [USER_JOURNEY.md](USER_JOURNEY.md).
 
-## Decided
+## Where things stand
 
-- **Product:** Pinwala. Owner sends a shopfront photo + voice note in his language → finished Google listing, posts, voice reply. AI Builders Day '26, Track 2 (Commerce, Pine Labs), 24 Oct, 9 AM–9 PM, Bengaluru. Goal: working demo + 20 real users.
-- **Main channel: the web app** (installable to the home screen; mic + camera; WhatsApp-style chat UI). Results go out through **Share to WhatsApp** (phone share sheet). No WhatsApp integration. **Twilio is dropped.**
-- **Scope is frozen** (PRD → "Frozen scope"): Voice Listing, Places check + rivals count, Content Studio, **Telegram bot (committed)**, Rival Watch, Pine Labs receipt QR. Each has a minimum version; enhancements only if their slot has room.
-- **Demo languages: Bengali, Hindi, English.** The demo persona is Bapi-da, a Kolkata-style mishti shop in Koramangala.
-- **Build and host:** Claude Code (personal account) builds in `~/Pinwala` → GitHub → **Replit** hosts the website. Logic in n8n Cloud, data in Supabase.
-- **Logic in n8n Cloud trial**, separate from Beacon's `auto.snowfig.com`. Workflows are named `Pinwala – …`. The website forwards `/api/*` to n8n webhooks with a secret key, so the n8n address never shows.
-- **Audio:** record WAV in the browser (Chrome's .webm isn't accepted by Gemini; n8n Cloud has no ffmpeg).
-- **AI rule #1:** never invent a field. Each field is tagged *said*, *seen* or *needs confirmation*.
-- **Design:** "jeweller's box" (lacquer green #0F2A24, ivory #F6F0E4, one marigold accent #E8A33D), Anek for UI + Indian scripts, upright serif display. **pbakaus/impeccable is installed in this project, telemetry off.** Run `/impeccable init` first in the new session.
-- **Can't publish to Google** (the Business Profile API needs approval): drafts + copy buttons, and say so honestly in the pitch.
+- **Folder:** `~/Pinwala` · **Repo:** [pookie-warrior/pinwala](https://github.com/pookie-warrior/pinwala) (private). The remote is tied to the pookie-warrior account, so pushes work even while the GitHub CLI's active account is Shushi-1427.
+- **Planning is frozen:** PRD (scope, timeline, architecture) and User Journey v2. Build from those.
+- **Code:** only last night's placeholder (FastAPI health check + one static page) plus test scripts. Nothing from the journey is built yet.
+- **Hard stops:** build freeze 3:45 · testing 3:45–4:15 · submission 4:15–4:30 (submissions close 5:00). Track 2 locks at 12:30.
 
-## Still open (decide first thing)
+## Decided (summary; details in the docs)
 
-1. **n8n connector:** the personal account has a custom n8n connector. **Check which instance it points to.** It must be the new Cloud trial, not `auto.snowfig.com`.
-2. **Speech-to-text route:** Gemini alone (one call: audio + photo → fields), or Sarvam Saarika first and then the LLM. Settled by `scripts/stt_test.py` on real Bengali notes.
-3. **Voice reply:** Sarvam Bulbul or ElevenLabs. Generate the same Bengali sentence with both and pick by ear.
-4. **Places key:** your own Google Cloud key (needed if n8n calls Places), or Replit's Google Maps connector (only usable from an app running on Replit). Check that it covers Places API (New).
+- **Mobile-first web app**, English only; বাংলা, हिंदी and WhatsApp shown as *coming soon*.
+- **Branch on entry:** "Is your shop on Google Maps?" → find my shop (search / near me / link) **or** photo + pin, on one map screen.
+- **Instant rivals snapshot** from Google Places, before the voice agent.
+- **ElevenLabs voice agent** (~6 questions, given the snapshot). 2:00 PM go/no-go; backup is on-screen questions answered by voice notes.
+- **Sarvam Document AI** reads the shop photo; **n8n Cloud** merges everything.
+- **Owner approves** his details (approval 1, counts as a user) → **₹99 Pine Labs** → connects **Telegram** (one-way updates).
+- **AgenticOrg "Pinwala Profile Agent"** prepares the profile / fixes pack → **Pinwala reviewer approves in AgenticOrg** (approval 2). First test whether the owner's tap can be passed to AgenticOrg's approve API instead.
+- **New shops:** draft → verification code entered in the app (approval 3) → live → ownership invite to his Gmail, **all simulated today**. **Existing shops:** report + fixes released.
 
-## Tonight's checklist
+## Do next, in order
 
-Do 1, 4, 11 and 12 at minimum. Those are the ones that would block tomorrow.
+1. **Organisers (now):** AgenticOrg login or invite (don't create a second organisation), confirm hackathon use is covered by AgenticOrg's licence, confirm API keys + Approvals are enabled. Ask the Pine Labs desk for checkout credentials and a sample.
+2. **AgenticOrg:** add a Gemini key under Settings → AI credentials; create an API key (Settings → API Keys); create the Pinwala Profile Agent (setup steps in the PRD's architecture section).
+3. **Replit:** import the repo, add Secrets, get the public URL (see README → Deploy).
+4. **Keys:** Google Places (own key, or confirm Replit's Maps connector covers Places API (New)), ElevenLabs, Sarvam, Telegram bot token (@BotFather), Supabase project, n8n Cloud (check the personal account's n8n connector points to the Cloud trial, not `auto.snowfig.com`).
+5. **Sarvam photo test:** 2–3 real signboard photos through Document AI Extract, to see whether it can tell the type of shop.
+6. **Build** in the PRD's order; send the link to shop owners at 1:30.
 
-1. Google Cloud: project → billing → enable **Places API (New)** → API key with a daily quota cap. (Skip only if you're going Replit-connector-only.)
-2. Gemini API key (Google AI Studio).
-3. Sarvam API key; check the free credits.
-4. **n8n Cloud trial:** sign up → turn on the instance MCP server → connect it to the **personal** Claude account → add Gemini, Places and Sarvam credentials inside n8n.
-5. Supabase: create a project called `pinwala`.
-5b. **Telegram:** create the bot with @BotFather (name it Pinwala), copy the bot token, and add it as a Telegram credential in n8n Cloud.
-5c. **Replit:** confirm the Google Maps connector covers Places API (New) and who pays for the calls.
-6. GitHub: create an empty repo called `pinwala`.
-7. Record 3 voice notes, ~10 s each (**Bengali**, Hindi, English), speaking like an owner: name, what you sell, area, hours. Put them in `samples/`.
-8. Add 3 shopfront photos with readable signboards to `samples/`.
-9. Record the demo "Bapi-da" voice note (Bengali) in a quiet room (backup for a noisy venue).
-10. Copy `.env.example` to `.env` and fill it in.
-11. Check the keys:
-    ```bash
-    cd ~/Pinwala && .venv/bin/python scripts/check_keys.py
-    ```
-12. Run the speech-to-text comparison:
-    ```bash
-    cd ~/Pinwala && .venv/bin/python scripts/stt_test.py
-    ```
-13. Message 5–10 shop owners you know so they're ready to try it tomorrow.
-14. Check the event rules on code written before the event.
-15. Charge laptop and phone, and test the phone hotspot.
-16. Open a new Claude Code session (personal account) in `~/Pinwala` and run `/impeccable init`, giving it `docs/PRD.md`.
+## Open questions
 
-## What's already in `~/Pinwala`
+- [ ] AgenticOrg access, licence, features enabled (organisers)
+- [ ] Places: own key or Replit's connector
+- [ ] Does AgenticOrg allow approving by API with our key (owner as approver)?
+- [ ] Domain and trademark check for Pinwala
+
+## What's in the repo
 
 | Path | What |
 | --- | --- |
-| `app/main.py` | Placeholder FastAPI app: `/api/health` (shows which keys are set, true/false only) + static page. To become: page + `/api/*` forwarding to n8n |
-| `app/config.py` | Loads `.env` without extra packages |
-| `static/index.html` | Placeholder page ("Pinwala") |
-| `scripts/check_keys.py` | PASS/FAIL/SKIP for Gemini, Places, Sarvam (the Twilio check shows SKIP and can be ignored) |
-| `scripts/stt_test.py` | Gemini vs Sarvam on `samples/*`, side by side; saves to `scripts/out/` |
-| `Dockerfile`, `render.yaml` | Docker deploy files from when Render was the host. Replit is the host now; keep them as a fallback |
-| `.claude/` | impeccable skills, agents and hooks; `launch.json` (dev server `pinwala`) |
-| `docs/PRD.md` | Full PRD (master copy) |
-| `.venv/` | Python 3.12 virtual environment with the packages installed |
+| `docs/PRD.md`, `docs/USER_JOURNEY.md` | The plan (master copies) |
+| `app/main.py`, `app/config.py` | Placeholder FastAPI app (`/api/health`) + `.env` loader |
+| `static/index.html` | Placeholder page |
+| `scripts/check_keys.py` | PASS/FAIL/SKIP for Gemini, Places, Sarvam (Twilio shows SKIP; not used) |
+| `scripts/stt_test.py` | Speech-to-text comparison on `samples/*` |
+| `Dockerfile`, `render.yaml` | Render fallback |
+| `.claude/` | impeccable design skill + agents, dev-server config (`pinwala`) |
 
-Git is set up, but nothing is committed yet. The first commit and push go to the new `pinwala` repo once Shipra OKs it.
+Not in git: `.env`, `samples/*`, `.venv/`, `.claude/settings.local.json`, impeccable's engine binary (reinstall with `npx impeccable install --providers=claude --scope=project`).
 
 ## Prompt to paste into the new session
 
-> Read docs/HANDOFF.md and docs/PRD.md in ~/Pinwala. We're building Pinwala for AI Builders Day today. Here's my output from check_keys.py and stt_test.py: [paste]. Help me settle the open decisions, then start on the Intake workflow in n8n Cloud and the web app.
+> Read docs/HANDOFF.md, docs/PRD.md and docs/USER_JOURNEY.md in ~/Pinwala. We're building Pinwala for AI Builders Day today; hard build freeze at 3:45. Start with the PRD's build order, item 1. Run /impeccable init first using the PRD's design direction.

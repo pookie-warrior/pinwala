@@ -3,7 +3,7 @@
 Frozen: 24 Oct 2026, AI Builders Day, after the venue rules. Owner: Shipra Shreya.
 Replaces v1 (single path). **Changes after this point need an explicit decision. The build follows this file.**
 
-**Mobile-first:** one question or action per screen, big tap targets, works one-handed on 4G. English only; বাংলা and हिंदी shown as *Coming soon*. WhatsApp shown as *Coming soon*; Telegram sends one-way updates only (no chat today).
+**Mobile-first:** one question or action per screen, big tap targets, works one-handed on 4G. English only; বাংলা and हिंदी shown as *Coming soon*. WhatsApp shown as *Coming soon*; Telegram verifies his phone number (contact share, no code) and sends one-way updates; no chat today. No login screen before he sees value.
 
 ## The journey at a glance
 
@@ -18,9 +18,11 @@ Voice agent conversation (ElevenLabs; knows the snapshot)
           ↓
 Summary → approve or edit          ← human approval 1 · counts as a "user"
           ↓
+Verify number on Telegram (share contact) → also connects updates · no Telegram → typed, unverified
+          ↓
 Sent to n8n → profile data prepared (Sarvam reads photo, ElevenLabs fields, merged)
           ↓
-Outcome screen (3 tiles) → Pay ₹99 (Pine Labs) → Connect Telegram
+Outcome screen (3 tiles) → Pay ₹99 (Pine Labs)
           ↓
 AgenticOrg "Pinwala Profile Agent" prepares the profile / fixes pack
           ↓
@@ -55,7 +57,9 @@ Telegram updates at each stage (one-way)
 | 17 | AgenticOrg agent | "Pinwala Profile Agent": takes the approved fields + snapshot (JSON) from n8n, returns the Google profile (new) or report + fixes (existing) as JSON. Gemini model; no tools |
 | 18 | AgenticOrg approval | Every run waits in AgenticOrg **Approvals** for a Pinwala reviewer (Shipra today). Approve → continue; reject with note → owner told what to fix. **First test** passing the owner's own tap to AgenticOrg's approve API (`POST /api/v1/approvals/{id}/decide`); if AgenticOrg blocks it (requester can't self-approve), keep the Pinwala reviewer |
 | 19 | Getting the result back | AgenticOrg can't call us back, so n8n checks the run status every few seconds until it's approved or rejected |
-| 20 | Telegram connect | Right after payment (the owner learns the review outcome there) |
+| 20 | Phone verification | **No login screen.** At step 5, after approval: **Verify your number on Telegram** → bot → **Share phone number** (Telegram's own verified number, no code). The same tap connects Telegram updates. No Telegram → typed number, marked *unverified* (can still pay; flagged in AgenticOrg review) |
+| 21 | SMS / call codes via Vobiz | Not today. SMS codes in India need DLT-registered templates (days). Voice-call codes only if the Vobiz desk confirms they work without registration (stretch) |
+| 22 | Returning users | No phone login today; a "continue where you left off" link is sent on Telegram |
 
 **Defaults assumed (change if wrong):** rivals snapshot is called straight from the web app, not n8n (speed); agent asks about 6 questions, 3 minutes max; photo required for new shops, optional for existing; Gmail required for new shops, optional for existing; data stored in Supabase.
 
@@ -100,7 +104,9 @@ Telegram updates at each stage (one-way)
 - Card with every field, each tagged *heard*, *on your signboard*, or *needs confirmation* (signboard and answers disagree, or missing)
 - Tap any field to edit
 - Must be confirmed: name, type of shop, pin, phone, hours
-- Contact: owner's name, phone, **Gmail** (*"the one on your phone: Settings → Google"*); WhatsApp updates: *coming soon*
+- Contact: owner's name, **Gmail** (*"the one on your phone: Settings → Google"*)
+- After **Yes, this is my shop**: **Verify your number on Telegram** (one tap) → Pinwala bot opens → **Share phone number** → back in the app, phone ✓ verified and Telegram updates connected
+- **No Telegram?** → type the number → marked *unverified*; WhatsApp: *coming soon*
 - Consent line: *"I own or run this shop and allow Pinwala to set up its Google profile."*
 - **Yes, this is my shop** → counted as a user
 
@@ -122,11 +128,11 @@ Telegram updates at each stage (one-way)
 
 - Pine Labs checkout → success screen + receipt
 
-### 8b. Connect Telegram + agent prepares + Pinwala review (human approval 2)
+### 8b. Agent prepares + Pinwala review (human approval 2)
 
-- Right after payment: **Get updates on Telegram** (one tap); screen shows *"Our team is checking your profile. We'll message you on Telegram in a few minutes."*
+- Right after payment, the screen shows *"Our team is checking your profile. We'll message you on Telegram in a few minutes."* (unverified users: *"Check back here in a few minutes"*)
 - n8n sends the approved data to the AgenticOrg agent → the run waits in **AgenticOrg Approvals**
-- The reviewer sees one item per shop, e.g. **"Submit Google profile: Bapi Sweets, Koramangala"**, with each field, its source (signboard / voice / owner pin / agent-written) and mismatches highlighted; plus *owner approved ✓ · paid ✓ · Gmail*
+- The reviewer sees one item per shop, e.g. **"Submit Google profile: Bapi Sweets, Koramangala"**, with each field, its source (signboard / voice / owner pin / agent-written) and mismatches highlighted; plus *owner approved ✓ · paid ✓ · phone verified ✓/✗ · Gmail*
 - **Reviewer checklist (~30 s):**
   1. Real shop? Real shopfront photo; pin in a sensible place
   2. Matches what he said? Name, phone, hours agree with voice + signboard; mismatches fixed first
@@ -150,7 +156,7 @@ Telegram updates at each stage (one-way)
 
 ### 10. Telegram updates
 
-- Connected in step 8b → one-way messages: payment received · being checked by our team · approved, verification started (or: *please fix X*) · live · ownership invite sent
+- Connected in step 5 (phone verification) → one-way messages: continue-where-you-left-off link · payment received · being checked by our team · approved, verification started (or: *please fix X*) · live · ownership invite sent
 - WhatsApp: *coming soon*
 
 ## Inputs
@@ -181,11 +187,13 @@ Telegram updates at each stage (one-way)
 | Payment fails | Retry; nothing unlocked |
 | Reviewer rejects | Owner gets the note; fixes in the app; resubmits (no new payment) |
 | Review takes long | Telegram update when done; app shows *"checking"* |
+| No Telegram | Typed number, *unverified*; progress shown in the app instead of Telegram |
+| Shares a different number than the shop's | Fine: the shop phone for Google stays as he confirmed it; the shared number is his contact |
 | Leaves halfway | Progress kept on the phone for 24 hours |
 
 ## Data
 
-- **Stored:** photo, fields, pin, Google place ID, owner name, phone, Gmail, consent, referrer, payment status, Telegram link
+- **Stored:** photo, fields, pin, Google place ID, owner name, phone (+ verified flag), Telegram user id, Gmail, consent, referrer, payment status, Telegram link
 - **Not stored after processing:** raw audio
 - **Never stored or logged:** verification codes
 
