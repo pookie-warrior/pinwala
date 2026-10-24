@@ -20,11 +20,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wght@400;500;600;700&family=Gloock&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script>try { if (sessionStorage.getItem("pw_splash")) document.documentElement.classList.add("no-splash"); sessionStorage.setItem("pw_splash", "1"); } catch (e) {}</script>
 </head>
 <body>
+  <div class="splash" id="splash" aria-hidden="true">
+    <div class="splash-grid"></div>
+    <div class="splash-mark">
+      <span class="splash-ring"></span>
+      <img class="splash-pin" src="logo.svg" alt="">
+    </div>
+    <div class="splash-word">Pinwala</div>
+    <div class="splash-tag">Get your shop found on Google.</div>
+  </div>
   <header class="bar"><a class="logo" href="/" aria-label="Pinwala home"><img src="logo.svg" alt="" width="30" height="30"><span>Pinwala</span></a><span id="count" class="count"></span></header>
   <main id="app"></main>
   <footer class="foot">We use your details only to prepare your Google profile. You approve everything.</footer>
+  <script>document.getElementById("splash").addEventListener("click", function () { this.classList.add("gone"); });</script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

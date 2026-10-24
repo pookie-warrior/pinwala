@@ -186,3 +186,24 @@ input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif;
 .steps span:nth-child(3).on i, .steps span:nth-child(3).done i { background: var(--gm-yellow); }
 .steps span:nth-child(4).on i, .steps span:nth-child(4).done i { background: var(--gm-green); }
 .steps span:nth-child(1).on { color: #8AB4F8 } .steps span:nth-child(2).on { color: #F28B82 } .steps span:nth-child(3).on { color: #FDD663 } .steps span:nth-child(4).on { color: #81C995 }
+
+/* ---- splash: pin drops, ripple, wordmark, tagline, then fades (CSS-only, cannot block the app) ---- */
+.splash { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: radial-gradient(700px 420px at 50% 40%, #24564A 0%, rgba(36,86,74,0) 70%), linear-gradient(180deg, #11302A, #0B201B);
+  animation: splashout .45s ease-in 2.05s forwards; cursor: pointer; }
+.splash.gone, .no-splash .splash { display: none; }
+.splash-grid { position: absolute; inset: 0; opacity: .5;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 34px), repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 34px);
+  mask-image: radial-gradient(circle at 50% 42%, #000 0%, transparent 60%); -webkit-mask-image: radial-gradient(circle at 50% 42%, #000 0%, transparent 60%); }
+.splash-mark { position: relative; width: 96px; height: 96px; }
+.splash-pin { position: absolute; inset: 0; width: 96px; height: 96px; filter: drop-shadow(0 10px 14px rgba(0,0,0,.45));
+  animation: splashpin .7s cubic-bezier(.2,.8,.25,1) .15s both; }
+.splash-ring { position: absolute; left: 50%; bottom: 2px; width: 24px; height: 10px; border-radius: 50%; border: 2px solid #E8A33D;
+  transform: translateX(-50%) scale(.2); opacity: 0; animation: splashring 1s ease-out .78s both; }
+.splash-word { font: 400 44px/1 "Gloock", serif; color: #F6F0E4; letter-spacing: .5px; animation: splashup .5s ease-out .95s both; }
+.splash-tag { font: 500 16px "Anek Latin", sans-serif; color: #F6D58C; animation: splashup .5s ease-out 1.25s both; }
+@keyframes splashpin { 0% { opacity: 0; transform: translateY(-90px) } 70% { opacity: 1; transform: translateY(4px) scaleY(.94) } 100% { opacity: 1; transform: none } }
+@keyframes splashring { 0% { opacity: .9; transform: translateX(-50%) scale(.3) } 100% { opacity: 0; transform: translateX(-50%) scale(5) } }
+@keyframes splashup { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes splashout { to { opacity: 0; visibility: hidden; pointer-events: none } }
+@media (prefers-reduced-motion: reduce) { .splash { display: none; } }
