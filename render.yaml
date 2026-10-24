@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: pinwala
+    runtime: docker
+    plan: starter          # free sleeps after 15 min idle; a 30-60s cold start mid-demo is not worth it
+    healthCheckPath: /api/health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: GOOGLE_PLACES_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: PUBLIC_BASE_URL   # e.g. https://pinwala.onrender.com, used for Twilio media links
+        sync: false

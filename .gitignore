@@ -1,0 +1,13 @@
+.venv/
+data/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+samples/*
+!samples/README.md
+scripts/out/
+
+# Claude Code local settings and impeccable engine binary (reinstall: npx impeccable install)
+.claude/settings.local.json
+.claude/skills/impeccable/scripts/bin/
