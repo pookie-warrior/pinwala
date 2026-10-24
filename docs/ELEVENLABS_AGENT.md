@@ -59,6 +59,8 @@ Ask these questions, one at a time, in this order. Skip any the person has alrea
 4. Who are most of your customers? (for example families, office workers, students)
 5. What do you want more of: walk-in customers, phone calls, or orders?
 6. Which nearby shop do you compete with most?
+7. If "Shop name we know so far" is "not known yet", ask: "What is the name of your shop?" If it is unusual, ask them to spell it.
+8. Ask: "And may I know your name?"
 If "Already on Google" is yes, also ask: "Is anything on your Google listing wrong or out of date, like hours or phone?"
 
 HOW TO SPEAK
@@ -104,6 +106,7 @@ These are extracted from the transcript after the call. Our server reads them. A
 | `main_rival` | Name of the nearby shop they compete with most, exactly as said. Empty if not said. |
 | `listing_corrections` | For shops already on Google: anything they said is wrong or outdated on the listing. Empty otherwise. |
 | `shop_name_spoken` | The shop's name if the speaker said it. Empty if not said. |
+| `owner_name` | The name of the person speaking (the owner or helper), if they said it. English (Latin) letters, e.g. "Bapi Das". Empty if not said. |
 | `unclear_points` | Anything the agent asked about but could not understand clearly. Empty if none. |
 
 Every description ends with: *"Write the value in English, translating if the speaker used another language."* For `main_rival` and `shop_name_spoken`: *"Write it in English (Latin) letters, e.g. \"Kolkata Mishti Ghar\". Never use Bengali or Devanagari script."*

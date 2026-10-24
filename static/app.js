@@ -166,14 +166,14 @@ async function finish(cid) {
 
 function summary() {
   const f = S.fields, rows = [
-    ["Shop name", S.place ? S.place.name : f.shop_name_spoken], ["Type", S.kind], ["Sells", f.sells],
+    ["Shop name", S.place ? S.place.name : f.shop_name_spoken], ["Owner", f.owner_name], ["Type", S.kind], ["Sells", f.sells],
     ["Hours", [f.hours, f.open_days].filter(Boolean).join(", ")], ["Phone", f.phone],
     ["Customers", f.customers], ["Wants more", f.goals], ["Main rival", f.main_rival],
   ];
   view(`<h2>Is this right?</h2><div class="card">
     ${rows.map(([k, v]) => `<div class="row"><span>${k}</span><span><b>${esc(v || "")}</b> ${v ? `<span class="tag">heard</span>` : `<span class="tag warn">needs confirmation</span>`}</span></div>`).join("")}
     ${f.unclear_points ? `<p class="muted">Couldn't catch: ${esc(f.unclear_points)}</p>` : ""}
-    <p class="muted">Your name</p><input id="nm" placeholder="Your name">
+    <p class="muted">Your name</p><input id="nm" placeholder="Your name" value="${esc(f.owner_name || "")}">
     <p class="muted">Gmail (the one on your phone)</p><input id="gm" type="email" placeholder="name@gmail.com">
     <label class="muted" style="display:flex;gap:8px;margin-top:12px"><input type="checkbox" id="ok" style="width:auto"> I own or run this shop and allow Pinwala to set up its Google profile.</label>
     <p class="err" id="e"></p>
