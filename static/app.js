@@ -123,7 +123,7 @@ async function talk() {
     <p class="center muted">Speak English, हिंदी or বাংলা.</p>
     <button class="btn ghost" id="end">End conversation</button>`);
   const st = document.getElementById("st"), orb = document.getElementById("orb");
-  let conv, cid;
+  let conv, cid, connected = false; const startedAt = Date.now();
   try {
     await navigator.mediaDevices.getUserMedia({ audio: true });
     st.textContent = "Connecting…";
@@ -131,14 +131,17 @@ async function talk() {
     const top = S.rivals.rivals[0];
     conv = await Conversation.startSession({
       agentId: CFG.agent_id,
+      connectionType: "websocket",
       dynamicVariables: {
         opening_line: opening(), shop_type: S.kind, is_listed: S.place ? "yes" : "no",
         shop_name: S.place ? S.place.name : "not known yet", rival_count: String(S.rivals.count),
         top_rival_summary: top ? `${top.rating} stars, ${top.reviews} reviews` : "none found",
       },
-      onConnect: () => { st.textContent = "Listening…"; orb.classList.add("live"); },
+      onConnect: () => { connected = true; st.textContent = "Listening…"; orb.classList.add("live"); },
       onModeChange: (m) => { st.textContent = m.mode === "speaking" ? "Pinwala is speaking…" : "Listening…"; },
-      onDisconnect: () => { orb.classList.remove("live"); finish(cid); },
+      onDisconnect: () => { orb.classList.remove("live");
+        if (!connected || Date.now() - startedAt < 5000) { st.innerHTML = `<span class="err">Couldn't connect. Please try again.</span>`; document.getElementById("end").textContent = "Try again"; document.getElementById("end").onclick = talk; return; }
+        finish(cid); },
       onError: (e) => { st.textContent = "Connection problem. Please try again."; console.error(e); },
     });
     cid = conv.getId();
