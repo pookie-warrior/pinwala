@@ -320,7 +320,7 @@ function done(verified) {
       <div class="row"><span>Your details</span><span class="tag">approved by you</span></div>
       <div class="row"><span>Phone</span><span class="tag ${S.vid ? "" : "warn"}">${S.vid ? "verified ✓" : "not verified"}</span></div>
       <div class="row"><span>Google profile</span><span class="tag warn" id="ao">sending to our AgenticOrg agent…</span></div>
-      <div class="row"><span>Human check</span><span class="tag warn">a Pinwala reviewer approves before anything goes out</span></div>
+      <div class="row"><span>Human check</span><span class="tag warn">approved by a person before anything goes out</span></div>
       <div id="draft"></div>
       <h2 style="margin-top:16px">Listing Pack · ₹99</h2>
       <p class="muted">Google profile set up + verification, 3 posts, review QR card for your counter.</p>
@@ -347,7 +347,7 @@ async function pollReview() {
   for (let i = 0; i < 40 && S.recordId; i++) {
     const r = await api(`/api/review/${S.recordId}`);
     if (r.status === "hitl_triggered" || r.status === "completed") {
-      el.textContent = r.status === "completed" ? "prepared and approved" : `prepared · waiting for Pinwala reviewer (ref ${r.correlation_id})`;
+      el.textContent = r.status === "completed" ? "prepared and approved" : `prepared · waiting for a Pinwala reviewer · ref ${r.correlation_id}`;
       if (r.post) {
         const d = document.getElementById("draft");
         d.innerHTML = `<div class="postcard"><p class="muted" style="margin:0 0 6px">Your first Google post · draft</p><p class="ptext">${esc(r.post)}</p>
@@ -362,3 +362,4 @@ async function pollReview() {
 }
 
 boot();
+

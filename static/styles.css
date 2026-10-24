@@ -86,3 +86,5 @@ input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif;
 .loading img { width: 48px; height: 48px; animation: hop 1s ease-in-out infinite; }
 @keyframes hop { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
 @media (prefers-reduced-motion: reduce) { .loading img { animation: none; } }
+.row .tag { white-space: normal; text-align: right; max-width: 62%; line-height: 1.35; padding: 4px 10px; border-radius: 12px; }
+.card .btn.ghost { color: var(--ink); border-color: #CFC4AE; }
