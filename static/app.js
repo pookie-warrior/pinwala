@@ -37,7 +37,13 @@ function landing() {
     <div class="langs"><span class="chip on">English</span><span class="chip soon">বাংলা · soon</span><span class="chip soon">हिंदी · soon</span></div>
     <div class="card"><h2>Check your street: is your shop on Google Maps?</h2>
       <button class="btn primary" id="yes">Yes, find my shop</button>
-      <button class="btn dark" id="no">No, not yet</button></div>`);
+      <button class="btn dark" id="no">No, not yet</button></div>
+    <p class="center"><a href="#demo" class="demo-link">▶ Watch the 45-second demo</a></p>
+    <section id="demo" class="demo">
+      <h2>See it in action</h2>
+      <p class="muted-light">A sample conversation in Hindi, with English captions. Dummy shop and data.</p>
+      <video src="demo.mp4" poster="demo-poster.jpg" controls playsinline preload="none"></video>
+    </section>`);
   document.getElementById("yes").onclick = () => { S.listed = true; findShop(); };
   document.getElementById("no").onclick = () => { S.listed = false; newShop(); };
 }
