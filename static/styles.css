@@ -52,3 +52,7 @@ input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif;
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(232,163,61,.55) } 100% { box-shadow: 0 0 0 28px rgba(232,163,61,0) } }
 .center { text-align: center; }
 .err { color: #F2B8A0; font-size: 14px; }
+.stats { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 2px; }
+.stats span { font-size: 13px; background: var(--lacquer-2); border: 1px solid #2C4A40; border-radius: 999px; padding: 4px 10px; color: #CFDDD7; }
+.stats b { color: var(--marigold); font-weight: 600; }
+.recent { font-size: 13px; color: var(--marigold); min-height: 1em; margin: -8px 0 14px; }

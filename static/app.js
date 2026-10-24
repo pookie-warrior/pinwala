@@ -1,7 +1,10 @@
 const voiceLib = () => import("https://esm.sh/@elevenlabs/client");
 
 const app = document.getElementById("app");
-const S = { kind: "shop", type: null, listed: null, place: null, lat: null, lng: null, rivals: null, fields: null };
+const S = { kind: "shop", type: null, listed: null, place: null, lat: null, lng: null, rivals: null, fields: null, area: "" };
+const REF = new URLSearchParams(location.search).get("ref") || "";
+const SESSION = (() => { try { let x = localStorage.getItem("pw_s"); if (!x) { x = Math.random().toString(36).slice(2, 12); localStorage.setItem("pw_s", x); } return x; } catch { return Math.random().toString(36).slice(2, 12); } })();
+const post = (p, b) => api(p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
 let CFG = {};
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const api = async (p, o) => (await fetch(p, o)).json();
@@ -10,16 +13,29 @@ const view = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
 async function boot() {
   CFG = await api("/api/config");
   voiceLib().catch(() => {});
-  api("/api/stats").then((s) => { if (s.approved) document.getElementById("count").textContent = `${s.approved} shops onboarded`; });
   landing();
+  refreshStats(); setInterval(refreshStats, 10000);
+}
+
+async function refreshStats() {
+  try {
+    const s = await api("/api/stats");
+    const el = document.getElementById("stats"); if (!el) return;
+    el.innerHTML = `<span><b>${s.shops_checked}</b> shops checked</span><span><b>${s.onboarded}</b> owners onboarded</span><span><b>${s.pay_interest}</b> ready to pay ₹99</span>`;
+    const r = (s.recent || [])[0], rc = document.getElementById("recent");
+    if (r && rc) { const mins = Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 60000));
+      rc.textContent = `A ${r.shop_type || "shop"}${r.area ? " in " + r.area : ""} just ${r.kind === "pay_interest" ? "reserved the ₹99 pack" : "got onboarded"} · ${mins < 60 ? mins + " min ago" : "today"}`; }
+  } catch {}
 }
 
 function landing() {
   view(`
+    <div class="stats" id="stats"></div>
     <h1>Get your shop found on Google.</h1>
-    <p class="lead">Talk for two minutes. Pinwala prepares your Google profile. You approve everything.</p>
+    <p class="lead">See how many shops near you are on Google in 10 seconds. Then talk for two minutes and Pinwala prepares your profile. You approve everything.</p>
+    <p class="recent" id="recent"></p>
     <div class="langs"><span class="chip on">English</span><span class="chip soon">বাংলা · soon</span><span class="chip soon">हिंदी · soon</span></div>
-    <div class="card"><h2>Is your shop on Google Maps?</h2>
+    <div class="card"><h2>Check your street: is your shop on Google Maps?</h2>
       <button class="btn primary" id="yes">Yes, find my shop</button>
       <button class="btn dark" id="no">No, not yet</button></div>`);
   document.getElementById("yes").onclick = () => { S.listed = true; findShop(); };
@@ -51,7 +67,7 @@ async function pickPlace(id) {
   view(`<p class="center">Opening your listing…</p>`);
   const p = await api(`/api/place/${id}`);
   if (p.error) return view(`<p class="err">Couldn't open that listing.</p><button class="btn ghost" onclick="location.reload()">Start again</button>`);
-  S.place = p; S.lat = p.lat; S.lng = p.lng; S.kind = /sweet|candy|confection|mithai/i.test(p.category) ? "sweet shop" : p.category.toLowerCase();
+  S.place = p; S.lat = p.lat; S.lng = p.lng; S.area = (p.address || "").split(",").slice(-4, -3)[0]?.trim() || ""; S.kind = /sweet|candy|confection|mithai/i.test(p.category) ? "sweet shop" : p.category.toLowerCase();
   snapshot();
 }
 
@@ -79,7 +95,7 @@ function newShop() {
       if (!area) return (e.textContent = "Use your location or type your area.");
       const r = await api(`/api/autocomplete?q=${encodeURIComponent(area)}`);
       if (!r.suggestions.length) return (e.textContent = "Couldn't find that area. Try a bigger landmark.");
-      const p = await api(`/api/place/${r.suggestions[0].id}`); S.lat = p.lat; S.lng = p.lng;
+      const p = await api(`/api/place/${r.suggestions[0].id}`); S.lat = p.lat; S.lng = p.lng; S.area = area.split(",")[0];
     }
     snapshot();
   };
@@ -105,8 +121,15 @@ async function snapshot() {
         : `<p><span class="big">${n}</span><br>${esc(S.kind)}s within 1 km are on Google. <b>You're not, yet.</b></p>`}
       ${top ? `<p class="muted">Most-reviewed nearby: ${top.rating}★ from ${top.reviews.toLocaleString()} reviews</p>` : ""}
     </div>
-    <button class="btn primary" id="talk">🎙️ Tell Pinwala about your shop (2 min)</button>`);
+    <button class="btn primary" id="talk">🎙️ Tell Pinwala about your shop (2 min)</button>
+    <button class="btn ghost" id="share">Know a shop owner? Send them this</button>`);
   document.getElementById("talk").onclick = talk;
+  post("/api/event/checked", { session: SESSION, kind: S.kind, area: S.area, listed: !!S.place, rival_count: r.count, ref: REF });
+  document.getElementById("share").onclick = async () => {
+    const url = `${location.origin}/?ref=share`, text = `Is your shop on Google Maps? ${n} ${S.kind}s near here already are. Check in 10 seconds: ${url}`;
+    if (navigator.share) { try { await navigator.share({ title: "Pinwala", text, url }); return; } catch {} }
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, "_blank");
+  };
 }
 
 function opening() {
@@ -200,13 +223,13 @@ function verify() {
   document.getElementById("call").onclick = async () => {
     e.textContent = "";
     const r = await api("/api/verify/call", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: document.getElementById("ph").value }) });
+      body: JSON.stringify({ phone: document.getElementById("ph").value, record: { id: S.recordId, session: SESSION, kind: S.kind, area: S.area, ref: REF } }) });
     if (r.error) return (e.textContent = r.error);
     document.getElementById("call").textContent = "Calling you now… pick up and press 1";
     for (let i = 0; i < 60; i++) {
       await new Promise((ok) => setTimeout(ok, 2000));
       const s = await api(`/api/verify/${r.vid}`);
-      if (s.status === "verified") return done(true);
+      if (s.status === "verified") { S.vid = r.vid; return done(true); }
       if (s.status === "missed" || s.status === "failed") { e.textContent = "We didn't get a 1. Try again, or give us a missed call."; document.getElementById("call").textContent = "📞 Call me again"; return; }
     }
   };
@@ -221,10 +244,19 @@ function done(verified) {
       <div class="row"><span>Human check</span><span class="tag warn">a Pinwala reviewer approves before anything goes out</span></div>
       <h2 style="margin-top:16px">Listing Pack · ₹99</h2>
       <p class="muted">Google profile set up + verification, 3 posts, review QR card for your counter.</p>
-      <button class="btn primary" disabled>Pay ₹99 with Pine Labs · coming soon</button>
+      <button class="btn primary" id="reserve" ${verified ? "" : "disabled"}>Reserve my Listing Pack · ₹99</button>
+      <p class="muted" id="rnote">Pay when Pine Labs checkout opens. We'll message you first. No charge now.</p>
       ${S.place ? `<a class="btn dark" href="${esc(S.place.review_link)}" target="_blank" rel="noopener">Open your Google review link</a>` : ""}
       <p class="muted">Updates on Telegram and WhatsApp: coming soon.</p></div>`);
   pollReview();
+  const rb = document.getElementById("reserve");
+  if (rb) rb.onclick = async () => {
+    const r = await post("/api/event/pay", { vid: S.vid, session: SESSION, kind: S.kind, area: S.area, ref: REF, record: S.recordId });
+    if (r.error) return (document.getElementById("rnote").textContent = r.error);
+    rb.textContent = "Reserved ✓ · ₹99"; rb.disabled = true;
+    document.getElementById("rnote").textContent = "Thank you! You're on the list. We'll confirm before any payment.";
+    refreshStats();
+  };
 }
 
 async function pollReview() {
