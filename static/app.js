@@ -123,7 +123,7 @@ async function snapshot() {
     </div>
     <button class="btn primary" id="talk">🎙️ Save this &amp; tell Pinwala about your shop</button>
     <button class="btn ghost" id="share">Know a shop owner? Send them this</button>`);
-  document.getElementById("talk").onclick = () => (S.vid ? talk() : verify());
+  document.getElementById("talk").onclick = () => (S.vid || S.skipVerify ? talk() : verify());
   post("/api/event/checked", { session: SESSION, kind: S.kind, area: S.area, listed: !!S.place, rival_count: r.count, ref: REF });
   document.getElementById("share").onclick = async () => {
     const url = `${location.origin}/?ref=share`, text = `Is your shop on Google Maps? ${n} ${S.kind}s near here already are. Check in 10 seconds: ${url}`;
@@ -162,7 +162,16 @@ async function talk() {
   view(`<h2>Talk to Pinwala</h2><div class="orb" id="orb"></div>
     <p class="center" id="st">Allow the microphone to start.</p>
     <p class="center muted">Pinwala will speak ${LANGS[S.lang]}.</p>
+    <div class="chat" id="chat"></div>
     <button class="btn ghost" id="end">End conversation</button>`);
+  const chat = document.getElementById("chat");
+  const say = (who, text) => {
+    const t = String(text || "").replace(/\[[^\]]{1,24}\]\s*/g, "").trim(); if (!t) return;
+    const last = chat.lastElementChild;
+    if (last && last.dataset.who === who) last.textContent += " " + t;
+    else { const b = document.createElement("div"); b.className = "msg " + who; b.dataset.who = who; b.textContent = t; chat.appendChild(b); }
+    chat.scrollTop = chat.scrollHeight;
+  };
   const st = document.getElementById("st"), orb = document.getElementById("orb");
   let conv, cid, connected = false, mode = "listening", finishing = false; const startedAt = Date.now();
   const hangUp = () => { if (conv) { try { conv.endSession(); } catch {} } };
@@ -185,6 +194,7 @@ async function talk() {
         top_rival_summary: top ? `${top.rating} stars, ${top.reviews} reviews` : "none found",
       },
       onConnect: () => { connected = true; st.textContent = "Listening…"; orb.classList.add("live"); },
+      onMessage: (m) => say(m.source === "user" ? "you" : "pin", m.message),
       onModeChange: (m) => { mode = m.mode; st.textContent = m.mode === "speaking" ? "Pinwala is speaking…" : "Listening…";
         if (finishing && m.mode === "listening") setTimeout(hangUp, 800); },
       onDisconnect: () => { orb.classList.remove("live");
@@ -237,6 +247,8 @@ function summary() {
   };
 }
 
+function verifyThen(next) { S.afterVerify = next; verify(); }
+
 function verify() {
   view(`<h2>Verify your number</h2><div class="card">
     <p>Save your result and talk to Pinwala. Verify your mobile number first, it takes one tap.</p>
@@ -244,22 +256,26 @@ function verify() {
     <p class="err" id="e"></p>
     <button class="btn primary" id="miss">📞 Give a missed call · free, we won't pick up</button>
     <button class="btn dark" id="call">Or call me, I'll press 1</button>
-    <p class="muted" id="hint">Call from the same number you typed. It rings once and cuts.</p></div>`);
+    <p class="muted" id="hint">Call from the same number you typed. It rings once and cuts.</p>
+    <button class="btn ghost" id="skip" style="display:none">Continue without verifying</button></div>`);
+  const showSkip = () => { const k = document.getElementById("skip"); if (k) k.style.display = "block"; };
+  document.getElementById("skip").onclick = () => { S.skipVerify = true; S.phone = ph(); const n = S.afterVerify; S.afterVerify = null; n ? n() : talk(); };
   const e = document.getElementById("e"), ph = () => document.getElementById("ph").value;
   const record = { session: SESSION, kind: S.kind, area: S.area, ref: REF };
   const wait = async (vid, btn, label) => {
     for (let i = 0; i < 60; i++) {
       await new Promise((ok) => setTimeout(ok, 2000));
       const st = await api(`/api/verify/${vid}`);
-      if (st.status === "verified") { S.vid = vid; S.phone = ph(); refreshStats(); return talk(); }
-      if (st.status === "missed" || st.status === "failed") { e.textContent = "We didn't get a 1. Try again, or give us a missed call."; btn.textContent = label; return; }
+      if (st.status === "verified") { S.vid = vid; S.phone = ph(); refreshStats(); const n = S.afterVerify; S.afterVerify = null; return n ? n() : talk(); }
+      if (st.status === "missed" || st.status === "failed") { e.textContent = "We didn't get a 1. Try again, or give us a missed call."; btn.textContent = label; showSkip(); return; }
+      if (i === 15) showSkip();
     }
-    e.textContent = "We haven't received your call yet. Try again."; btn.textContent = label;
+    e.textContent = "We haven't received your call yet. Try again."; btn.textContent = label; showSkip();
   };
   document.getElementById("miss").onclick = async () => {
     e.textContent = "";
     const r = await post("/api/verify/missed", { phone: ph(), record });
-    if (r.error) return (e.textContent = r.error);
+    if (r.error) { showSkip(); return (e.textContent = r.error); }
     const b = document.getElementById("miss"); b.textContent = "Waiting for your missed call…";
     location.href = "tel:08064269429";
     wait(r.vid, b, "📞 Give a missed call · free, we won't pick up");
@@ -267,7 +283,7 @@ function verify() {
   document.getElementById("call").onclick = async () => {
     e.textContent = "";
     const r = await post("/api/verify/call", { phone: ph(), record });
-    if (r.error) return (e.textContent = r.error);
+    if (r.error) { showSkip(); return (e.textContent = r.error); }
     const b = document.getElementById("call"); b.textContent = "Calling you now… pick up and press 1";
     wait(r.vid, b, "Or call me, I'll press 1");
   };
@@ -277,16 +293,19 @@ function done(verified) {
   view(`<h1>You're almost on Google.</h1>
     <div class="card">
       <div class="row"><span>Your details</span><span class="tag">approved by you</span></div>
-      <div class="row"><span>Phone</span><span class="tag">${verified ? "verified ✓" : "unverified"}</span></div>
+      <div class="row"><span>Phone</span><span class="tag ${S.vid ? "" : "warn"}">${S.vid ? "verified ✓" : "not verified"}</span></div>
       <div class="row"><span>Google profile</span><span class="tag warn" id="ao">sending to our AgenticOrg agent…</span></div>
       <div class="row"><span>Human check</span><span class="tag warn">a Pinwala reviewer approves before anything goes out</span></div>
       <h2 style="margin-top:16px">Listing Pack · ₹99</h2>
       <p class="muted">Google profile set up + verification, 3 posts, review QR card for your counter.</p>
-      <button class="btn primary" id="reserve" ${verified ? "" : "disabled"}>Reserve my Listing Pack · ₹99</button>
-      <p class="muted" id="rnote">Pay when Pine Labs checkout opens. We'll message you first. No charge now.</p>
+      <button class="btn primary" id="reserve" ${S.vid ? "" : "disabled"}>Reserve my Listing Pack · ₹99</button>
+      <p class="muted" id="rnote">${S.vid ? "Pay when Pine Labs checkout opens. We'll message you first. No charge now." : "Verify your number to reserve. We need a way to reach you before any payment."}</p>
+      ${S.vid ? "" : `<button class="btn ghost" id="reverify">Verify my number now</button>`}
       ${S.place ? `<a class="btn dark" href="${esc(S.place.review_link)}" target="_blank" rel="noopener">Open your Google review link</a>` : ""}
       <p class="muted">Updates on Telegram and WhatsApp: coming soon.</p></div>`);
   pollReview();
+  const rv = document.getElementById("reverify");
+  if (rv) rv.onclick = () => verifyThen(() => done(true));
   const rb = document.getElementById("reserve");
   if (rb) rb.onclick = async () => {
     const r = await post("/api/event/pay", { vid: S.vid, session: SESSION, kind: S.kind, area: S.area, ref: REF, record: S.recordId });
