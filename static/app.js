@@ -8,7 +8,14 @@ const post = (p, b) => api(p, { method: "POST", headers: { "Content-Type": "appl
 let CFG = {};
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const api = async (p, o) => (await fetch(p, o)).json();
-const view = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
+const STEPS = ["Check", "Verify", "Talk", "Confirm"];
+const view = (html, opt = {}) => {
+  const bar = opt.step ? `<div class="steps" aria-label="Step ${opt.step} of 4">${STEPS.map((n, i) =>
+    `<span class="${i + 1 < opt.step ? "done" : i + 1 === opt.step ? "on" : ""}"><i></i>${n}</span>`).join("")}</div>` : "";
+  const back = opt.back ? `<button class="back" id="back">← Back</button>` : "";
+  app.innerHTML = back + bar + html; window.scrollTo(0, 0);
+  if (opt.back) document.getElementById("back").onclick = opt.back;
+};
 
 async function boot() {
   CFG = await api("/api/config");
@@ -34,7 +41,7 @@ function landing() {
     <h1>Get your shop found on Google.</h1>
     <p class="lead">See how many shops near you are on Google in 10 seconds. Then talk for two minutes and Pinwala prepares your profile. You approve everything.</p>
     <p class="recent" id="recent"></p>
-    <div class="langs"><span class="chip on">English</span><span class="chip soon">বাংলা · soon</span><span class="chip soon">हिंदी · soon</span></div>
+    <div class="langs"><span class="chip on">Talk in English</span><span class="chip on">हिंदी</span><span class="chip on">বাংলা</span></div>
     <div class="card"><h2>Check your street: is your shop on Google Maps?</h2>
       <button class="btn primary" id="yes">Yes, find my shop</button>
       <button class="btn dark" id="no">No, not yet</button></div>
@@ -57,7 +64,7 @@ function locate() {
 function findShop() {
   view(`<h2>Find your shop</h2>
     <div class="card"><input id="q" placeholder="Shop name and area, e.g. Anand Sweets Koramangala" autocomplete="off">
-      <ul class="list" id="res"></ul><p class="muted">Not found? <a href="#" id="notfound">Add it as a new shop</a></p></div>`);
+      <ul class="list" id="res"></ul><p class="muted">Not found? <a href="#" id="notfound">Add it as a new shop</a></p></div>`, { back: landing, step: 1 });
   let t; const q = document.getElementById("q"); q.focus();
   q.oninput = () => { clearTimeout(t); t = setTimeout(async () => {
     if (q.value.trim().length < 3) return;
@@ -70,7 +77,7 @@ function findShop() {
 }
 
 async function pickPlace(id) {
-  view(`<p class="center">Opening your listing…</p>`);
+  view(`<div class="loading"><img src="logo.svg" alt=""><p>Opening your listing…</p></div>`, { step: 1 });
   const p = await api(`/api/place/${id}`);
   if (p.error) return view(`<p class="err">Couldn't open that listing.</p><button class="btn ghost" onclick="location.reload()">Start again</button>`);
   S.place = p; S.lat = p.lat; S.lng = p.lng; S.area = (p.address || "").split(",").slice(-4, -3)[0]?.trim() || ""; S.kind = /sweet|candy|confection|mithai/i.test(p.category) ? "sweet shop" : p.category.toLowerCase();
@@ -86,7 +93,7 @@ function newShop() {
       <button class="btn dark" id="gps">📍 I'm at my shop, use my location</button>
       <input id="area" placeholder="Or type your area, e.g. Koramangala, Bengaluru">
       <p class="err" id="e"></p>
-      <button class="btn primary" id="go">See shops near me</button></div>`);
+      <button class="btn primary" id="go">See shops near me</button></div>`, { back: landing, step: 1 });
   document.querySelectorAll(".grid button").forEach((b) => b.onclick = () => {
     document.querySelectorAll(".grid button").forEach((x) => x.classList.remove("on")); b.classList.add("on"); S.type = b.dataset.t; });
   document.getElementById("gps").onclick = async () => {
@@ -108,10 +115,15 @@ function newShop() {
 }
 
 async function snapshot() {
-  view(`<p class="center">Checking Google Maps near you…</p>`);
+  view(`<div class="loading"><img src="logo.svg" alt=""><p>Checking Google Maps near you…</p></div>`, { step: 1 });
   const r = await api(`/api/rivals?lat=${S.lat}&lng=${S.lng}&kind=${encodeURIComponent(S.kind)}&exclude=${S.place ? S.place.id : ""}`);
   S.rivals = r;
-  const top = r.rivals[0];
+  post("/api/event/checked", { session: SESSION, kind: S.kind, area: S.area, listed: !!S.place, rival_count: r.count, ref: REF });
+  renderSnapshot();
+}
+
+function renderSnapshot() {
+  const r = S.rivals, top = r.rivals[0];
   const n = r.capped ? `${r.count}+` : r.count;
   const dots = r.rivals.map((x) => {
     const dx = (x.lng - S.lng) / 0.0186 * 100 + 50, dy = 50 - (x.lat - S.lat) / 0.018 * 100;
@@ -125,12 +137,12 @@ async function snapshot() {
       ${p
         ? `<p><b>${p.rating ?? "–"}★</b> from <b>${p.reviews}</b> reviews · ${p.photos} photos${missing.length ? ` · missing: ${missing.join(", ")}` : ""}</p>`
         : `<p><span class="big">${n}</span><br>${esc(S.kind)}s within 1 km are on Google. <b>You're not, yet.</b></p>`}
-      ${top ? `<p class="muted">Most-reviewed nearby: ${top.rating}★ from ${top.reviews.toLocaleString()} reviews</p>` : ""}
+      ${r.rivals.length ? `<p class="muted" style="margin:14px 0 4px">Top-reviewed near you</p><ol class="rivals">${r.rivals.slice(0, 3).map((x) =>
+        `<li><span>${esc(x.name)}</span><b>${x.rating ?? "–"}★ · ${Number(x.reviews || 0).toLocaleString("en-IN")}</b></li>`).join("")}</ol>` : ""}
     </div>
     <button class="btn primary" id="talk">🎙️ Save this &amp; tell Pinwala about your shop</button>
-    <button class="btn ghost" id="share">Know a shop owner? Send them this</button>`);
+    <button class="btn ghost" id="share">Know a shop owner? Send them this</button>`, { back: () => (S.place ? findShop() : newShop()), step: 1 });
   document.getElementById("talk").onclick = () => (S.vid || S.skipVerify ? talk() : verify());
-  post("/api/event/checked", { session: SESSION, kind: S.kind, area: S.area, listed: !!S.place, rival_count: r.count, ref: REF });
   document.getElementById("share").onclick = async () => {
     const url = `${location.origin}/?ref=share`, text = `Is your shop on Google Maps? ${n} ${S.kind}s near here already are. Check in 10 seconds: ${url}`;
     if (navigator.share) { try { await navigator.share({ title: "Pinwala", text, url }); return; } catch {} }
@@ -159,7 +171,7 @@ function pickLanguage() {
     <button class="btn primary" data-l="en">English</button>
     <button class="btn primary" data-l="hi">हिंदी · Hindi</button>
     <button class="btn primary" data-l="bn">বাংলা · Bengali</button>
-    <p class="muted">You can mix in other words. Pinwala will reply in the language you pick.</p></div>`);
+    <p class="muted">You can mix in other words. Pinwala will reply in the language you pick.</p></div>`, { back: renderSnapshot, step: 3 });
   document.querySelectorAll("[data-l]").forEach((b) => b.onclick = () => { S.lang = b.dataset.l; talk(); });
 }
 
@@ -169,7 +181,7 @@ async function talk() {
     <p class="center" id="st">Allow the microphone to start.</p>
     <p class="center muted">Pinwala will speak ${LANGS[S.lang]}.</p>
     <div class="chat" id="chat"></div>
-    <button class="btn ghost" id="end">End conversation</button>`);
+    <button class="btn ghost" id="end">End conversation</button>`, { step: 3 });
   const chat = document.getElementById("chat");
   const say = (who, text) => {
     const t = String(text || "").replace(/\[[^\]]{1,24}\]\s*/g, "").trim(); if (!t) return;
@@ -218,7 +230,7 @@ async function talk() {
 let finished = false;
 async function finish(cid) {
   if (finished || !cid) return; finished = true;
-  view(`<p class="center">Preparing your summary…</p>`);
+  view(`<div class="loading"><img src="logo.svg" alt=""><p>Preparing your summary…</p></div>`, { step: 4 });
   for (let i = 0; i < 15; i++) {
     const r = await api(`/api/conversation/${cid}`);
     if (r.ready) { S.fields = r.fields; return summary(); }
@@ -229,26 +241,33 @@ async function finish(cid) {
 }
 
 function summary() {
-  const f = S.fields, rows = [
-    ["Shop name", S.place ? S.place.name : f.shop_name_spoken], ["Owner", f.owner_name], ["Type", S.kind], ["Sells", f.sells],
-    ["Hours", [f.hours, f.open_days].filter(Boolean).join(", ")], ["Phone", f.phone || S.phone],
-    ["Customers", f.customers], ["Wants more", f.goals], ["Main rival", f.main_rival],
+  const f = S.fields;
+  const rows = [
+    ["shop_name_spoken", "Shop name", S.place ? S.place.name : f.shop_name_spoken], ["owner_name", "Owner", f.owner_name],
+    ["sells", "Sells", f.sells], ["hours", "Hours", [f.hours, f.open_days].filter(Boolean).join(", ")],
+    ["phone", "Phone", f.phone || S.phone], ["customers", "Customers", f.customers],
+    ["goals", "Wants more", f.goals], ["main_rival", "Main rival", f.main_rival],
   ];
   view(`<h2>Is this right?</h2><div class="card">
-    ${rows.map(([k, v]) => `<div class="row"><span>${k}</span><span><b>${esc(v || "")}</b> ${v ? `<span class="tag">heard</span>` : `<span class="tag warn">needs confirmation</span>`}</span></div>`).join("")}
+    <p class="muted" style="margin-top:0">Tap any field to fix it. Type: <b>${esc(S.kind)}</b></p>
+    ${rows.map(([key, label, v]) => `<label class="field"><span class="flabel">${label} ${v ? `<span class="tag">heard</span>` : `<span class="tag warn">needs confirmation</span>`}</span>
+      <input data-k="${key}" value="${esc(v || "")}" placeholder="Add ${label.toLowerCase()}"></label>`).join("")}
     ${f.unclear_points ? `<p class="muted">Couldn't catch: ${esc(f.unclear_points)}</p>` : ""}
-    <p class="muted">Your name</p><input id="nm" placeholder="Your name" value="${esc(f.owner_name || "")}">
-    <p class="muted">Gmail (the one on your phone)</p><input id="gm" type="email" placeholder="name@gmail.com">
+    <label class="field"><span class="flabel">Gmail (the one on your phone)</span><input id="gm" type="email" placeholder="name@gmail.com"></label>
     <label class="muted" style="display:flex;gap:8px;margin-top:12px"><input type="checkbox" id="ok" style="width:auto"> I own or run this shop and allow Pinwala to set up its Google profile.</label>
     <p class="err" id="e"></p>
-    <button class="btn primary" id="yes">Yes, this is my shop</button></div>`);
+    <button class="btn primary" id="yes">Yes, this is my shop</button></div>`, { step: 4 });
   document.getElementById("yes").onclick = async () => {
     const e = document.getElementById("e");
     if (!document.getElementById("ok").checked) return (e.textContent = "Please tick the consent box.");
-    const r = await api("/api/approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-      listed: !!S.place, place_id: S.place?.id || null, kind: S.kind, lat: S.lat, lng: S.lng, fields: S.fields,
-      owner: document.getElementById("nm").value, gmail: document.getElementById("gm").value,
-      rivals: S.rivals.rivals.slice(0, 5), rival_count: S.rivals.count }) });
+    const edited = { ...S.fields };
+    document.querySelectorAll("input[data-k]").forEach((x) => { edited[x.dataset.k] = x.value.trim() || null; });
+    if (edited.hours && edited.hours !== [f.hours, f.open_days].filter(Boolean).join(", ")) edited.open_days = null;
+    S.fields = edited;
+    const r = await post("/api/approve", {
+      listed: !!S.place, place_id: S.place?.id || null, kind: S.kind, lat: S.lat, lng: S.lng, fields: edited,
+      owner: edited.owner_name || "", gmail: document.getElementById("gm").value,
+      rivals: S.rivals.rivals.slice(0, 5), rival_count: S.rivals.count });
     S.recordId = r.id; done(true);
   };
 }
@@ -263,7 +282,7 @@ function verify() {
     <button class="btn primary" id="miss">📞 Give a missed call · free, we won't pick up</button>
     <button class="btn dark" id="call">Or call me, I'll press 1</button>
     <p class="muted" id="hint">Call from the same number you typed. It rings once and cuts.</p>
-    <button class="btn ghost" id="skip" style="display:none">Continue without verifying</button></div>`);
+    <button class="btn ghost" id="skip" style="display:none">Continue without verifying</button></div>`, { back: S.afterVerify ? () => done(true) : renderSnapshot, step: 2 });
   const showSkip = () => { const k = document.getElementById("skip"); if (k) k.style.display = "block"; };
   document.getElementById("skip").onclick = () => { S.skipVerify = true; S.phone = ph(); const n = S.afterVerify; S.afterVerify = null; n ? n() : talk(); };
   const e = document.getElementById("e"), ph = () => document.getElementById("ph").value;
@@ -302,6 +321,7 @@ function done(verified) {
       <div class="row"><span>Phone</span><span class="tag ${S.vid ? "" : "warn"}">${S.vid ? "verified ✓" : "not verified"}</span></div>
       <div class="row"><span>Google profile</span><span class="tag warn" id="ao">sending to our AgenticOrg agent…</span></div>
       <div class="row"><span>Human check</span><span class="tag warn">a Pinwala reviewer approves before anything goes out</span></div>
+      <div id="draft"></div>
       <h2 style="margin-top:16px">Listing Pack · ₹99</h2>
       <p class="muted">Google profile set up + verification, 3 posts, review QR card for your counter.</p>
       <button class="btn primary" id="reserve" ${S.vid ? "" : "disabled"}>Reserve my Listing Pack · ₹99</button>
@@ -326,8 +346,16 @@ async function pollReview() {
   const el = document.getElementById("ao");
   for (let i = 0; i < 40 && S.recordId; i++) {
     const r = await api(`/api/review/${S.recordId}`);
-    if (r.status === "hitl_triggered") { el.textContent = `prepared · waiting for Pinwala reviewer (ref ${r.correlation_id})`; return; }
-    if (r.status === "completed") { el.textContent = "prepared and approved"; el.classList.remove("warn"); return; }
+    if (r.status === "hitl_triggered" || r.status === "completed") {
+      el.textContent = r.status === "completed" ? "prepared and approved" : `prepared · waiting for Pinwala reviewer (ref ${r.correlation_id})`;
+      if (r.post) {
+        const d = document.getElementById("draft");
+        d.innerHTML = `<div class="postcard"><p class="muted" style="margin:0 0 6px">Your first Google post · draft</p><p class="ptext">${esc(r.post)}</p>
+          <button class="btn ghost-dark" id="cp">Copy post</button></div>`;
+        document.getElementById("cp").onclick = async () => { try { await navigator.clipboard.writeText(r.post); document.getElementById("cp").textContent = "Copied ✓"; } catch {} };
+      }
+      return;
+    }
     if (r.status === "failed") { el.textContent = "queued for manual preparation"; return; }
     await new Promise((ok) => setTimeout(ok, 1500));
   }

@@ -235,8 +235,18 @@ def send_to_agenticorg(rec: dict):
         log.warning("agenticorg run failed %s %s", st, d)
         reviews[rec["id"]] = {"status": "failed"}
         return
+    out = d.get("output")
+    if isinstance(out, str):
+        try:
+            out = json.loads(out)
+        except ValueError:
+            out = {}
+    out = out if isinstance(out, dict) else {}
+    posts = [p for p in (out.get("posts") or []) if isinstance(p, str) and p.strip()]
     reviews[rec["id"]] = {"status": d.get("status"), "confidence": d.get("confidence"),
-                          "correlation_id": d.get("correlation_id")}
+                          "correlation_id": d.get("correlation_id"), "post": posts[0] if posts else None,
+                          "description": (out.get("profile") or {}).get("description"),
+                          "needs_confirmation": out.get("needs_confirmation") or []}
     log.info("agenticorg %s -> %s %s", rec["id"], d.get("status"), d.get("correlation_id"))
 
 
