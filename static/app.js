@@ -164,7 +164,8 @@ async function talk() {
     <p class="center muted">Pinwala will speak ${LANGS[S.lang]}.</p>
     <button class="btn ghost" id="end">End conversation</button>`);
   const st = document.getElementById("st"), orb = document.getElementById("orb");
-  let conv, cid, connected = false; const startedAt = Date.now();
+  let conv, cid, connected = false, mode = "listening", finishing = false; const startedAt = Date.now();
+  const hangUp = () => { if (conv) { try { conv.endSession(); } catch {} } };
   try {
     await navigator.mediaDevices.getUserMedia({ audio: true });
     st.textContent = "Connecting…";
@@ -174,13 +175,18 @@ async function talk() {
       agentId: CFG.agent_id,
       connectionType: "websocket",
       overrides: { agent: { language: S.lang } },
+      clientTools: {
+        // Agent calls this after its closing line; hang up only once it has finished speaking.
+        finish_call: async () => { finishing = true; if (mode === "listening") setTimeout(hangUp, 1200); setTimeout(hangUp, 20000); },
+      },
       dynamicVariables: {
         opening_line: opening(), language_name: LANGS[S.lang], shop_type: S.kind, is_listed: S.place ? "yes" : "no",
         shop_name: S.place ? S.place.name : "not known yet", rival_count: String(S.rivals.count),
         top_rival_summary: top ? `${top.rating} stars, ${top.reviews} reviews` : "none found",
       },
       onConnect: () => { connected = true; st.textContent = "Listening…"; orb.classList.add("live"); },
-      onModeChange: (m) => { st.textContent = m.mode === "speaking" ? "Pinwala is speaking…" : "Listening…"; },
+      onModeChange: (m) => { mode = m.mode; st.textContent = m.mode === "speaking" ? "Pinwala is speaking…" : "Listening…";
+        if (finishing && m.mode === "listening") setTimeout(hangUp, 800); },
       onDisconnect: () => { orb.classList.remove("live");
         if (!connected || Date.now() - startedAt < 5000) { st.innerHTML = `<span class="err">Couldn't connect. Please try again.</span>`; document.getElementById("end").textContent = "Try again"; document.getElementById("end").onclick = talk; return; }
         finish(cid); },

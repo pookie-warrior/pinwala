@@ -149,3 +149,7 @@ Not covered by simulation: the actual voices per language, real speech recogniti
 ## 10. Language lock (24 Oct)
 
 The owner picks **English / हिंदी / বাংলা** in the app before the call. The app passes `overrides.agent.language` (`en`/`hi`/`bn`, which selects that language's voice preset) and the `language_name` variable, and writes `opening_line` in that language. **Detect language is OFF**, and the agent's *language* override is enabled in Security → Overrides. `language_name` defaults to "English" if not passed. Simulated test: owner switched to English mid-call; agent stayed in Hindi throughout; fields in English.
+
+## 11. Ending the call (24 Oct)
+
+The built-in **End conversation** tool cut the closing line: the agent called it ~2 s into a ~15 s closing sentence and ElevenLabs hung up at once, stopping the audio on the phone. Replaced by a **client tool `finish_call`** (no system tools on): the app receives it, waits until the agent's mode returns to *listening* (it finished speaking), then ends the session (+0.8 s; hard cap 20 s). Prompt ENDING says to use `finish_call` only after the closing line.
