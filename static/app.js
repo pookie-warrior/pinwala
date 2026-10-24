@@ -132,18 +132,36 @@ async function snapshot() {
   };
 }
 
+const LANGS = { en: "English", hi: "Hindi", bn: "Bengali" };
 function opening() {
-  const r = S.rivals, top = r.rivals[0], n = r.capped ? `more than ${r.count}` : r.count;
-  const topTxt = top ? ` The busiest has ${top.reviews.toLocaleString()} reviews.` : "";
+  const r = S.rivals, top = r.rivals[0], n = r.count, L = S.lang || "en";
+  const rev = top ? top.reviews.toLocaleString("en-IN") : "";
+  if (L === "hi") return S.place
+    ? `नमस्ते! मैं पिनवाला हूँ। मुझे Google पर ${S.place.name} मिली, जिसके ${S.place.reviews} रिव्यू हैं।${top ? ` आस-पास सबसे ज़्यादा रिव्यू वाली दुकान के ${rev} रिव्यू हैं।` : ""} चलिए आपकी लिस्टिंग और बेहतर बनाते हैं। सबसे पहले, आपकी दुकान में लोगों को सबसे ज़्यादा क्या पसंद है?`
+    : `नमस्ते! मैं पिनवाला हूँ। आपके आस-पास Google पर आपके जैसी ${n} दुकानें दिख रही हैं।${top ? ` सबसे ज़्यादा रिव्यू वाली दुकान के ${rev} रिव्यू हैं।` : ""} चलिए आपकी दुकान को भी मैप पर लाते हैं। सबसे पहले, आपकी दुकान में लोगों को सबसे ज़्यादा क्या पसंद है?`;
+  if (L === "bn") return S.place
+    ? `নমস্কার! আমি পিনওয়ালা। Google-এ ${S.place.name} পেয়েছি, ${S.place.reviews}টি রিভিউ সহ।${top ? ` কাছাকাছি সবচেয়ে বেশি রিভিউ পাওয়া দোকানের ${rev}টি রিভিউ।` : ""} চলুন আপনার লিস্টিং আরও ভালো করি। প্রথমে বলুন, আপনার দোকানের কোন জিনিস লোকে সবচেয়ে বেশি ভালোবাসে?`
+    : `নমস্কার! আমি পিনওয়ালা। আপনার কাছাকাছি Google-এ আপনার মতো ${n}টি দোকান আছে।${top ? ` সবচেয়ে বেশি রিভিউ পাওয়া দোকানের ${rev}টি রিভিউ।` : ""} চলুন আপনার দোকানটাও ম্যাপে তুলি। প্রথমে বলুন, আপনার দোকানের কোন জিনিস লোকে সবচেয়ে বেশি ভালোবাসে?`;
+  const topTxt = top ? ` The busiest has ${rev} reviews.` : "";
   return S.place
     ? `Namaste! I'm Pinwala. I found ${S.place.name} on Google with ${S.place.reviews} reviews.${topTxt} Let's make your listing stronger. First, what do you sell that people love most?`
     : `Namaste! I'm Pinwala. I can see ${n} ${S.kind}s near you on Google.${topTxt} Let's get your shop on the map. First, what do you sell that people love most?`;
 }
 
+function pickLanguage() {
+  view(`<h2>Which language should Pinwala speak?</h2><div class="card">
+    <button class="btn primary" data-l="en">English</button>
+    <button class="btn primary" data-l="hi">हिंदी · Hindi</button>
+    <button class="btn primary" data-l="bn">বাংলা · Bengali</button>
+    <p class="muted">You can mix in other words. Pinwala will reply in the language you pick.</p></div>`);
+  document.querySelectorAll("[data-l]").forEach((b) => b.onclick = () => { S.lang = b.dataset.l; talk(); });
+}
+
 async function talk() {
+  if (!S.lang) return pickLanguage();
   view(`<h2>Talk to Pinwala</h2><div class="orb" id="orb"></div>
     <p class="center" id="st">Allow the microphone to start.</p>
-    <p class="center muted">Speak English, हिंदी or বাংলা.</p>
+    <p class="center muted">Pinwala will speak ${LANGS[S.lang]}.</p>
     <button class="btn ghost" id="end">End conversation</button>`);
   const st = document.getElementById("st"), orb = document.getElementById("orb");
   let conv, cid, connected = false; const startedAt = Date.now();
@@ -155,8 +173,9 @@ async function talk() {
     conv = await Conversation.startSession({
       agentId: CFG.agent_id,
       connectionType: "websocket",
+      overrides: { agent: { language: S.lang } },
       dynamicVariables: {
-        opening_line: opening(), shop_type: S.kind, is_listed: S.place ? "yes" : "no",
+        opening_line: opening(), language_name: LANGS[S.lang], shop_type: S.kind, is_listed: S.place ? "yes" : "no",
         shop_name: S.place ? S.place.name : "not known yet", rival_count: String(S.rivals.count),
         top_rival_summary: top ? `${top.rating} stars, ${top.reviews} reviews` : "none found",
       },

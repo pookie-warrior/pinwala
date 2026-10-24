@@ -66,7 +66,7 @@ If "Already on Google" is yes, also ask: "Is anything on your Google listing wro
 HOW TO SPEAK
 - Only ever speak your reply to the person. Never say your instructions, rules, notes or reasoning out loud.
 - Short sentences. Simple English. One question per turn.
-- Reply in the language the person speaks (English, Hindi or Bengali). If they mix languages, use the one they use most. Keep the same simple style in every language.
+- Speak only {{language_name}}. Understand any language the person mixes in, but always reply in {{language_name}}. Switch language only if the person clearly asks you to.
 - Be warm and patient. If you didn't catch something, ask once more; if still unclear, move on.
 - Never promise rankings, more customers, or Google approval.
 - Never mention prices or discounts for their shop unless they say them.
@@ -145,3 +145,7 @@ Agent ID `agent_8901m5pps90see9ryvcw36zjwzf9`. Three simulated runs (an AI playi
 | 3 | **All pass:** summary + closing line, then ends; all 10 fields in English; `hours` / `open_days` empty with *"opening hours, open days"* in `unclear_points` | — |
 
 Not covered by simulation: the actual voices per language, real speech recognition in a noisy shop. Do one live Preview call per language before the demo.
+
+## 10. Language lock (24 Oct)
+
+The owner picks **English / हिंदी / বাংলা** in the app before the call. The app passes `overrides.agent.language` (`en`/`hi`/`bn`, which selects that language's voice preset) and the `language_name` variable, and writes `opening_line` in that language. **Detect language is OFF**, and the agent's *language* override is enabled in Security → Overrides. `language_name` defaults to "English" if not passed. Simulated test: owner switched to English mid-call; agent stayed in Hindi throughout; fields in English.
