@@ -1,4 +1,4 @@
-import { Conversation } from "https://esm.sh/@elevenlabs/client";
+const voiceLib = () => import("https://esm.sh/@elevenlabs/client");
 
 const app = document.getElementById("app");
 const S = { kind: "shop", type: null, listed: null, place: null, lat: null, lng: null, rivals: null, fields: null };
@@ -9,6 +9,7 @@ const view = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
 
 async function boot() {
   CFG = await api("/api/config");
+  voiceLib().catch(() => {});
   api("/api/stats").then((s) => { if (s.approved) document.getElementById("count").textContent = `${s.approved} shops onboarded`; });
   landing();
 }
@@ -50,7 +51,7 @@ async function pickPlace(id) {
   view(`<p class="center">Opening your listing…</p>`);
   const p = await api(`/api/place/${id}`);
   if (p.error) return view(`<p class="err">Couldn't open that listing.</p><button class="btn ghost" onclick="location.reload()">Start again</button>`);
-  S.place = p; S.lat = p.lat; S.lng = p.lng; S.kind = p.category.toLowerCase();
+  S.place = p; S.lat = p.lat; S.lng = p.lng; S.kind = /sweet|candy|confection|mithai/i.test(p.category) ? "sweet shop" : p.category.toLowerCase();
   snapshot();
 }
 
@@ -125,6 +126,8 @@ async function talk() {
   let conv, cid;
   try {
     await navigator.mediaDevices.getUserMedia({ audio: true });
+    st.textContent = "Connecting…";
+    const { Conversation } = await voiceLib();
     const top = S.rivals.rivals[0];
     conv = await Conversation.startSession({
       agentId: CFG.agent_id,
