@@ -1,8 +1,8 @@
-# Pinwala
+# Pinwaala
 
-Get your shop found on Google. A shop owner says whether he's already on Google Maps, finds his shop or drops a pin, sees his rivals instantly, talks to a voice agent for two minutes, approves the result, and pays ₹99 to have his Google profile prepared (new shops) or get a competitor report and fixes (existing shops). A Pinwala reviewer approves every profile in AgenticOrg before anything is done in the owner's name.
+Get your shop found on Google. A shop owner says whether he's already on Google Maps, finds his shop or drops a pin, sees his rivals instantly, talks to a voice agent for two minutes, approves the result, and pays ₹99 to have his Google profile prepared (new shops) or get a competitor report and fixes (existing shops). A Pinwaala reviewer approves every profile in AgenticOrg before anything is done in the owner's name.
 
-Built for AI Builders Day '26, Track 2 · AI for Commerce. Repo: `pookie-warrior/pinwala` (private).
+Built for AI Builders Day '26, Track 2 · AI for Commerce. Repo: `pookie-warrior/pinwala` (public).
 
 **Start here:** [docs/PRD.md](docs/PRD.md) (scope, timeline, architecture) · [docs/USER_JOURNEY.md](docs/USER_JOURNEY.md) (frozen journey v2) · [docs/HANDOFF.md](docs/HANDOFF.md) (status and next steps)
 

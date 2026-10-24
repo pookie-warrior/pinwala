@@ -50,7 +50,7 @@ function landing() {
     <div class="stats" id="stats"></div>
     <p class="recent" id="recent" aria-live="polite"></p>
     <h1>Get your shop found on <span class="gold">Google.</span></h1>
-    <p class="lead">See how many shops near you are on Google in 10 seconds. Then talk for two minutes and Pinwala prepares your profile. You approve everything.</p>
+    <p class="lead">See how many shops near you are on Google in 10 seconds. Then talk for two minutes and Pinwaala prepares your profile. You approve everything.</p>
     <div class="langs"><span class="chip on">Talk in English</span><span class="chip on">हिंदी</span><span class="chip on">বাংলা</span></div>
     <div class="hero-map gmap" aria-hidden="true"><span class="road r1"></span><span class="road r2"></span><span class="road r3"></span><span class="water"></span><span class="park p1"></span><span class="park p2"></span>${[[14,30],[28,62],[40,22],[55,70],[66,34],[78,58],[86,24],[22,82],[70,84],[34,50]].map(([x, y], i) =>
       `<span class="rp" style="left:${x}%;top:${y}%;--d:${i * 110}ms"></span>`).join("")}
@@ -153,12 +153,12 @@ function renderSnapshot() {
       ${r.rivals.length ? `<p class="muted" style="margin:14px 0 4px">Top-reviewed near you</p><ol class="rivals">${r.rivals.slice(0, 3).map((x) =>
         `<li><span><i class="mini-pin"></i>${esc(x.name)}</span><b>${x.rating ?? "–"}<em class="star">★</em> · ${Number(x.reviews || 0).toLocaleString("en-IN")}</b></li>`).join("")}</ol>` : ""}
     </div>
-    <button class="btn primary" id="talk">🎙️ Save this &amp; tell Pinwala about your shop</button>
+    <button class="btn primary" id="talk">🎙️ Save this &amp; tell Pinwaala about your shop</button>
     <button class="btn ghost" id="share">Know a shop owner? Send them this</button>`, { back: () => (S.place ? findShop() : newShop()), step: 1 });
   document.getElementById("talk").onclick = () => (S.vid || S.skipVerify ? talk() : verify());
   document.getElementById("share").onclick = async () => {
     const url = `${location.origin}/?ref=share`, text = `Is your shop on Google Maps? ${n} ${S.kind}s near here already are. Check in 10 seconds: ${url}`;
-    if (navigator.share) { try { await navigator.share({ title: "Pinwala", text, url }); return; } catch {} }
+    if (navigator.share) { try { await navigator.share({ title: "Pinwaala", text, url }); return; } catch {} }
     window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, "_blank");
   };
 }
@@ -175,24 +175,24 @@ function opening() {
     : `নমস্কার! আমি পিনওয়ালা। আপনার কাছাকাছি Google-এ আপনার মতো ${n}টি দোকান আছে।${top ? ` সবচেয়ে বেশি রিভিউ পাওয়া দোকানের ${rev}টি রিভিউ।` : ""} চলুন আপনার দোকানটাও ম্যাপে তুলি। প্রথমে বলুন, আপনার দোকানের কোন জিনিস লোকে সবচেয়ে বেশি ভালোবাসে?`;
   const topTxt = top ? ` The busiest has ${rev} reviews.` : "";
   return S.place
-    ? `Namaste! I'm Pinwala. I found ${S.place.name} on Google with ${S.place.reviews} reviews.${topTxt} Let's make your listing stronger. First, what do you sell that people love most?`
-    : `Namaste! I'm Pinwala. I can see ${n} ${S.kind}s near you on Google.${topTxt} Let's get your shop on the map. First, what do you sell that people love most?`;
+    ? `Namaste! I'm Pinwaala. I found ${S.place.name} on Google with ${S.place.reviews} reviews.${topTxt} Let's make your listing stronger. First, what do you sell that people love most?`
+    : `Namaste! I'm Pinwaala. I can see ${n} ${S.kind}s near you on Google.${topTxt} Let's get your shop on the map. First, what do you sell that people love most?`;
 }
 
 function pickLanguage() {
-  view(`<h2>Which language should Pinwala speak?</h2><div class="card">
+  view(`<h2>Which language should Pinwaala speak?</h2><div class="card">
     <button class="btn primary" data-l="en">English</button>
     <button class="btn primary" data-l="hi">हिंदी · Hindi</button>
     <button class="btn primary" data-l="bn">বাংলা · Bengali</button>
-    <p class="muted">You can mix in other words. Pinwala will reply in the language you pick.</p></div>`, { back: renderSnapshot, step: 3 });
+    <p class="muted">You can mix in other words. Pinwaala will reply in the language you pick.</p></div>`, { back: renderSnapshot, step: 3 });
   document.querySelectorAll("[data-l]").forEach((b) => b.onclick = () => { S.lang = b.dataset.l; talk(); });
 }
 
 async function talk() {
   if (!S.lang) return pickLanguage();
-  view(`<h2>Talk to Pinwala</h2><div class="orb" id="orb"></div>
+  view(`<h2>Talk to Pinwaala</h2><div class="orb" id="orb"></div>
     <p class="center" id="st">Allow the microphone to start.</p>
-    <p class="center muted">Pinwala will speak ${LANGS[S.lang]}.</p>
+    <p class="center muted">Pinwaala will speak ${LANGS[S.lang]}.</p>
     <div class="chat" id="chat"></div>
     <button class="btn ghost" id="end">End conversation</button>`, { step: 3 });
   const chat = document.getElementById("chat");
@@ -230,7 +230,7 @@ async function talk() {
           orb.style.setProperty("--v", Math.min(1, v * 2.2).toFixed(3)); if (orb.isConnected) requestAnimationFrame(tick); };
         requestAnimationFrame(tick); },
       onMessage: (m) => say(m.source === "user" ? "you" : "pin", m.message),
-      onModeChange: (m) => { mode = m.mode; st.textContent = m.mode === "speaking" ? "Pinwala is speaking…" : "Listening…";
+      onModeChange: (m) => { mode = m.mode; st.textContent = m.mode === "speaking" ? "Pinwaala is speaking…" : "Listening…";
         if (finishing && m.mode === "listening") setTimeout(hangUp, 800); },
       onDisconnect: () => { orb.classList.remove("live");
         if (!connected || Date.now() - startedAt < 5000) { st.innerHTML = `<span class="err">Couldn't connect. Please try again.</span>`; document.getElementById("end").textContent = "Try again"; document.getElementById("end").onclick = talk; return; }
@@ -271,7 +271,7 @@ function summary() {
       <input data-k="${key}" value="${esc(v || "")}" placeholder="Add ${label.toLowerCase()}"></label>`).join("")}
     ${f.unclear_points ? `<p class="muted">Couldn't catch: ${esc(f.unclear_points)}</p>` : ""}
     <label class="field"><span class="flabel">Gmail (the one on your phone)</span><input id="gm" type="email" placeholder="name@gmail.com"></label>
-    <label class="muted" style="display:flex;gap:8px;margin-top:12px"><input type="checkbox" id="ok" style="width:auto"> I own or run this shop and allow Pinwala to set up its Google profile.</label>
+    <label class="muted" style="display:flex;gap:8px;margin-top:12px"><input type="checkbox" id="ok" style="width:auto"> I own or run this shop and allow Pinwaala to set up its Google profile.</label>
     <p class="err" id="e"></p>
     <button class="btn primary" id="yes">Yes, this is my shop</button></div>`, { step: 4 });
   document.getElementById("yes").onclick = async () => {
@@ -293,7 +293,7 @@ function verifyThen(next) { S.afterVerify = next; verify(); }
 
 function verify() {
   view(`<h2>Verify your number</h2><div class="card">
-    <p>Save your result and talk to Pinwala. Verify your mobile number first, it takes one tap.</p>
+    <p>Save your result and talk to Pinwaala. Verify your mobile number first, it takes one tap.</p>
     <input id="ph" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
     <p class="err" id="e"></p>
     <button class="btn primary" id="miss">📞 Give a missed call · free, we won't pick up</button>
@@ -364,7 +364,7 @@ async function pollReview() {
   for (let i = 0; i < 40 && S.recordId; i++) {
     const r = await api(`/api/review/${S.recordId}`);
     if (r.status === "hitl_triggered" || r.status === "completed") {
-      el.textContent = r.status === "completed" ? "prepared and approved" : `prepared · waiting for a Pinwala reviewer · ref ${r.correlation_id}`;
+      el.textContent = r.status === "completed" ? "prepared and approved" : `prepared · waiting for a Pinwaala reviewer · ref ${r.correlation_id}`;
       if (r.post) {
         const d = document.getElementById("draft");
         d.innerHTML = `<div class="postcard"><p class="muted" style="margin:0 0 6px">Your first Google post · draft</p><p class="ptext">${esc(r.post)}</p>

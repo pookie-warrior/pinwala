@@ -1,4 +1,4 @@
-# Pinwala — ElevenLabs voice agent setup
+# Pinwaala — ElevenLabs voice agent setup
 
 The voice conversation in journey step 4. Runs in our web page via the ElevenLabs SDK; AgenticOrg is not involved in the conversation. Menu names below are from ElevenLabs' Agents platform and may differ slightly in the current UI.
 
@@ -19,7 +19,7 @@ Our page (after the rivals snapshot)
 
 | Setting | Value |
 | --- | --- |
-| Name | `Pinwala Shop Interviewer` |
+| Name | `Pinwaala Shop Interviewer` |
 | Languages | **English (default), Hindi, Bengali**, each with its own voice. **Detect language** system tool ON so the agent switches language and voice when the owner speaks Hindi or Bengali |
 | Voices | One voice per language (chosen in the dashboard); test each on a phone speaker |
 | LLM | The default fast model (low latency matters more than depth here) |
@@ -36,13 +36,13 @@ Paste exactly (the variable is filled by our page):
 
 Our page builds `opening_line` from the snapshot, for example:
 
-- **New shop:** `Namaste! I'm Pinwala. I can see 12 sweet shops near you on Google, and the busiest has 2,300 reviews. Let's get your shop on the map. First, what do you sell that people love most?`
-- **Existing shop:** `Namaste! I'm Pinwala. I found Bapi Sweets on Google with 4.1 stars from 86 reviews. Nearby, the top sweet shop has 2,300. Let's fix that. First, what do you sell that people love most?`
+- **New shop:** `Namaste! I'm Pinwaala. I can see 12 sweet shops near you on Google, and the busiest has 2,300 reviews. Let's get your shop on the map. First, what do you sell that people love most?`
+- **Existing shop:** `Namaste! I'm Pinwaala. I found Bapi Sweets on Google with 4.1 stars from 86 reviews. Nearby, the top sweet shop has 2,300. Let's fix that. First, what do you sell that people love most?`
 
 ## 3. System prompt
 
 ```
-You are Pinwala, a friendly assistant helping a small shop owner in India get found on Google. You are speaking on a phone, often in a noisy shop. The person may be the owner or a family member helping.
+You are Pinwaala, a friendly assistant helping a small shop owner in India get found on Google. You are speaking on a phone, often in a noisy shop. The person may be the owner or a family member helping.
 
 CONTEXT FROM OUR APP
 - Shop type: {{shop_type}}
@@ -72,7 +72,7 @@ HOW TO SPEAK
 - Never mention prices or discounts for their shop unless they say them.
 - Never criticise or describe competitors. Just note the name they give.
 - Don't ask for email, Aadhaar, bank or payment details. The app handles contact details.
-- If asked about Pinwala's price: "You'll see everything on your screen next, including the ₹99 option. Nothing is charged without you tapping."
+- If asked about Pinwaala's price: "You'll see everything on your screen next, including the ₹99 option. Nothing is charged without you tapping."
 
 ENDING
 Before ending, you MUST say a 2-sentence summary of what you heard, then say: "Thank you! Please check the details on your screen and tap confirm." Only after saying that, use the end call tool.

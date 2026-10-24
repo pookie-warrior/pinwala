@@ -1,4 +1,4 @@
-"""Pinwala web app: find shop / pin, rivals snapshot, ElevenLabs voice agent, summary, Vobiz press-1 verification."""
+"""Pinwaala web app: find shop / pin, rivals snapshot, ElevenLabs voice agent, summary, Vobiz press-1 verification."""
 from __future__ import annotations
 
 import hashlib
@@ -38,7 +38,7 @@ AO_AGENT = os.getenv("AGENTICORG_AGENT_ID", "a64642fd-f0a9-4ad7-badd-dda53fccd4c
 SHOP_TYPES = {"Sweets": "sweet shop", "Grocery": "grocery store", "Bakery": "bakery", "Salon": "beauty salon",
               "Tailor": "tailor", "Medical": "pharmacy", "Restaurant": "restaurant", "Other": "shop"}
 
-app = FastAPI(title="Pinwala")
+app = FastAPI(title="Pinwaala")
 verifications: dict[str, dict] = {}
 reviews: dict[str, dict] = {}
 
@@ -220,7 +220,7 @@ async def approve(req: Request):
 
 
 def send_to_agenticorg(rec: dict):
-    """Pinwala Profile Agent on AgenticOrg; every run stops for human approval (hitl_triggered)."""
+    """Pinwaala Profile Agent on AgenticOrg; every run stops for human approval (hitl_triggered)."""
     f = rec.get("fields") or {}
     shop = {"shop_type": rec.get("kind"), "heard": {k: v for k, v in f.items() if v},
             "signboard": None, "pin": {"lat": rec.get("lat"), "lng": rec.get("lng")},
@@ -271,7 +271,7 @@ async def verify_call(req: Request):
     st, r = http("POST", f"https://api.vobiz.ai/api/v1/Account/{aid}/Call/", {
         "from": VOBIZ_FROM, "to": "91" + phone, "answer_url": f"{b}/api/vobiz/answer?v={vid}", "answer_method": "POST",
         "hangup_url": f"{b}/api/vobiz/hangup?v={vid}", "hangup_method": "POST",
-        "time_limit": 60, "hangup_on_ring": 40, "caller_name": "Pinwala"}, {"X-Auth-ID": aid, "X-Auth-Token": tok})
+        "time_limit": 60, "hangup_on_ring": 40, "caller_name": "Pinwaala"}, {"X-Auth-ID": aid, "X-Auth-Token": tok})
     if st not in (200, 201):
         verifications[vid]["status"] = "failed"
         log.warning("vobiz call failed %s %s", st, r)
@@ -311,7 +311,7 @@ async def vobiz_answer(req: Request, v: str = ""):
         return Response("<Response><Hangup/></Response>", media_type="application/xml")
     act = f"{base_url(req)}/api/vobiz/keypress?v={v}"
     xml = (f'<Response><Gather inputType="dtmf" numDigits="1" executionTimeout="15" action="{act}" method="POST">'
-           "<Speak>Hello, this is Pinwala. Press 1 to confirm this is your number.</Speak></Gather>"
+           "<Speak>Hello, this is Pinwaala. Press 1 to confirm this is your number.</Speak></Gather>"
            "<Speak>We did not get your answer. Goodbye.</Speak></Response>")
     return Response(xml, media_type="application/xml")
 

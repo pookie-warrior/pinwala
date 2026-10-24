@@ -1,29 +1,29 @@
-# Pinwala — Product Requirements
+# Pinwaala — Product Requirements
 
 24 Oct 2026 · Shipra Shreya
 **Master copy.** The step-by-step flow is frozen in [USER_JOURNEY.md](USER_JOURNEY.md) v2; this PRD follows it. Updated at the venue after the AI Builders Day rules were announced: about 5 hours of build, a hard stop at 4:30 PM, and a required AgenticOrg agent, Pine Labs payment and real users.
 
-Pinwala turns one photo and one voice note into a ready Google listing and posts. English today; Bangla and Hindi are next. Then it guides him through getting it live on Google. Built for AI Builders Day '26, **Track 2 · AI for Commerce** ("Every Business Is a Store"), and designed to outlive it.
+Pinwaala turns one photo and one voice note into a ready Google listing and posts. English today; Bangla and Hindi are next. Then it guides him through getting it live on Google. Built for AI Builders Day '26, **Track 2 · AI for Commerce** ("Every Business Is a Store"), and designed to outlive it.
 
 ## Hackathon rules that shape this PRD
 
-| Rule | What it means for Pinwala |
+| Rule | What it means for Pinwaala |
 | --- | --- |
 | Challenge starts 10:15 · **tracks lock 12:30** · **submissions close 5:00 PM** | Our hard stops: **build freeze 3:45**, testing 3:45–4:15, **submission 4:15–4:30** |
 | **Product:** live on a public URL | Hosted on Replit |
-| **Team:** 1+ agent on **AgenticOrg**, a human approves | Pinwala Profile Agent prepares the profile; a Pinwala reviewer approves it in AgenticOrg Approvals (the owner also approves his details in the app) |
+| **Team:** 1+ agent on **AgenticOrg**, a human approves | Pinwaala Profile Agent prepares the profile; a Pinwaala reviewer approves it in AgenticOrg Approvals (the owner also approves his details in the app) |
 | **Money:** Pine Labs payments that work | ₹99 Listing Pack, real Pine Labs checkout (journey step 9) |
 | **Users:** 20 free or 5 paying | Shop owners reached through shared links (any chat app) with `?ref=` tracking |
 | **Submit:** live URL, proof of life, **2-minute demo video**, **LinkedIn + X or Instagram posts** (compulsory) | Done between 4:15 and 4:30; video recorded during testing |
 | **Track 2 deliverable:** "One order, end to end": a real customer from first message to payment or signup | One real shop owner going landing page → listing → ₹99 payment |
 | Judging, round 1 (table): Problem & Insight 25 · Ambition 15 · Agentic Depth 15 · **Traction 25** · Demo & Polish 20 | Users are worth as much as the problem; start sharing the link early |
 | Judging, round 2 (top 10 on stage, 7:00): 20 · 20 · 20 · **Traction 30** · 10 | |
-| Credits: AgenticOrg (required), Replit, ElevenLabs + Vobiz, Pine Labs, Render, Greptile | Replit for hosting; ElevenLabs for the voice agent; **Vobiz for phone verification** (Pinwala calls, press 1; missed-call fallback) |
-| "Who owns what we build? You do." | Pinwala is Shipra's |
+| Credits: AgenticOrg (required), Replit, ElevenLabs + Vobiz, Pine Labs, Render, Greptile | Replit for hosting; ElevenLabs for the voice agent; **Vobiz for phone verification** (Pinwaala calls, press 1; missed-call fallback) |
+| "Who owns what we build? You do." | Pinwaala is Shipra's |
 
-## Name: Pinwala
+## Name: Pinwaala
 
-**Decided.** Pinwala is the helper who puts your pin on the map, the way the doodhwala brings the milk. "Pinwala ko bolo." Other options considered: Haazir, Signboard, Awaaz, Nukkad, Saamne. Still open: domain and trademark check.
+**Decided.** Pinwaala is the helper who puts your pin on the map, the way the doodhwala brings the milk. "Pinwaala ko bolo." Other options considered: Haazir, Signboard, Awaaz, Nukkad, Saamne. Still open: domain and trademark check.
 
 ## Problem and opportunity
 
@@ -69,10 +69,10 @@ Out of scope for now: chains, businesses with no shopfront, ads management.
 | 2 | **Find my shop** (search by name / near me / paste link) and **photo + pin** for new shops, on one map screen | 2a, 2b | Real |
 | 3 | **Instant rivals snapshot** from Google Places (map + numbers / scorecard) | 3 | Real |
 | 4 | **ElevenLabs voice agent** (~6 questions, knows the snapshot; **English, Hindi, Bengali**) + field extraction in English; Sarvam Document AI reads the photo | 4 | Real (backup: on-screen questions + voice notes) |
-| 5 | **Summary → owner approves** (human approval 1) + Gmail, consent + **phone verified: Pinwala calls, owner presses 1** (fallbacks: missed call to Pinwala, then SMS code via Firebase; Telegram optional for updates) | 5 | Real |
+| 5 | **Summary → owner approves** (human approval 1) + Gmail, consent + **phone verified: Pinwaala calls, owner presses 1** (fallbacks: missed call to Pinwaala, then SMS code via Firebase; Telegram optional for updates) | 5 | Real |
 | 6 | **n8n** merges everything into profile data; **outcome screen** (3 tiles) | 6–7 | Real |
 | 7 | **₹99 Pine Labs checkout** | 8 | **Real payment** |
-| 8 | **AgenticOrg Pinwala Profile Agent** prepares the profile / fixes pack → **Pinwala reviewer approves in AgenticOrg** (human approval 2) | 8b | Real agent + real approval |
+| 8 | **AgenticOrg Pinwaala Profile Agent** prepares the profile / fixes pack → **Pinwaala reviewer approves in AgenticOrg** (human approval 2) | 8b | Real agent + real approval |
 | 9 | **After approval:** new shop → verification code in app (approval 3) → live → ownership invite (**simulated**); existing shop → report + fixes released | 9a, 9b | Google steps simulated |
 | 10 | **Progress updates** in the app at each stage; Telegram too if connected | 10 | Real |
 
@@ -109,7 +109,7 @@ Five modules mirror Beacon's structure for any business. Today ships the first o
 | **Pine Labs review loop** | (new) | A QR on the receipt that opens his Google review page |
 | **Everywhere Check** | Off-page cockpit | Justdial, Zomato, Swiggy, Practo, IndiaMART: missing or mismatched details |
 
-**Agency model (once Google grants Business Profile API access):** Pinwala creates the profile from the voice note, starts verification, and the owner just forwards Google's code on Telegram (later WhatsApp) and taps to approve. **The owner stays the owner; Pinwala is the manager.** Google decides how each shop is verified (SMS, phone call, video, postcard); Pinwala guides it but never skips it.
+**Agency model (once Google grants Business Profile API access):** Pinwaala creates the profile from the voice note, starts verification, and the owner just forwards Google's code on Telegram (later WhatsApp) and taps to approve. **The owner stays the owner; Pinwaala is the manager.** Google decides how each shop is verified (SMS, phone call, video, postcard); Pinwaala guides it but never skips it.
 
 ## UX and visual direction
 
@@ -143,8 +143,8 @@ Owner's phone (web app on Replit, mobile-first)
 n8n Cloud
   ├─ Sarvam Document AI (Extract) ── reads the shop photo (async: submit, poll, fetch)
   ├─ merge photo + conversation + Places → profile data
-  ├─ AgenticOrg: agents.run("Pinwala Profile Agent", inputs=JSON)
-  │     └─ run waits in AgenticOrg Approvals → Pinwala reviewer approves (2)
+  ├─ AgenticOrg: agents.run("Pinwaala Profile Agent", inputs=JSON)
+  │     └─ run waits in AgenticOrg Approvals → Pinwaala reviewer approves (2)
   ├─ poll run status until approved / rejected
   └─ Telegram one-way updates + update the web app
 Supabase ── shops, fields, consent, payments, referrers, live counter
@@ -152,19 +152,19 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 
 | Piece | Choice | Notes |
 | --- | --- | --- |
-| Web app | Python FastAPI (in `~/Pinwala`) on Replit | Mobile-first; HTTPS needed for mic, camera, GPS |
+| Web app | Python FastAPI (in `~/Pinwaala`) on Replit | Mobile-first; HTTPS needed for mic, camera, GPS |
 | Find shop / rivals | Google Places API (New), own key (tested 24 Oct, 0.4–0.7 s per call). **Find my shop:** Autocomplete as he types (biased 5 km around him) + Place Details (category, status, phone, website, hours, ≤10 photos, ≤5 reviews, Maps link, review link `search.google.com/local/writereview?placeid=<id>`). **Rivals:** **Text Search for his shop type** (e.g. "sweet shop") restricted to a ~1 km box around his pin, max 20 → show "20+". **Not** Nearby Search by category: it returned McDonald's, cafés and ice-cream parlours, because Google files most Indian sweet shops as *candy store* | Short Maps links resolved on the server |
-| Voice agent | ElevenLabs agent *Pinwala Shop Interviewer* + web SDK ([ELEVENLABS_AGENT.md](ELEVENLABS_AGENT.md)) | English/Hindi/Bengali with Detect language; snapshot passed as dynamic variables; 10 Data collection fields (English); allowlisted to `pinwaala.replit.app` |
+| Voice agent | ElevenLabs agent *Pinwaala Shop Interviewer* + web SDK ([ELEVENLABS_AGENT.md](ELEVENLABS_AGENT.md)) | English/Hindi/Bengali with Detect language; snapshot passed as dynamic variables; 10 Data collection fields (English); allowlisted to `pinwaala.replit.app` |
 | Photo reading | Sarvam Document AI, Extract with a field schema | JPG/PNG, Bengali/Hindi/English; async; 10 requests/min |
 | Orchestration | n8n Cloud trial | Separate from Beacon |
 | Agent + approval | AgenticOrg | No ElevenLabs/Vobiz integration exists; agent is text-in/JSON-out. API key from Settings → API Keys (admin only). Python SDK `client.agents.run(...)` → `status`, `output`. No callbacks: poll |
 | Payment | Pine Labs checkout + confirmation | |
-| Phone verification (main) | **Pinwala calls, press 1 (Vobiz outbound).** `POST https://api.vobiz.ai/api/v1/Account/{auth_id}/Call/` with headers `X-Auth-ID`, `X-Auth-Token`; body `from: 918064269429`, `to: 91XXXXXXXXXX`, `answer_url` + `hangup_url` (our app), `time_limit: 60`, `hangup_on_ring: 40`. Answer URL returns `<Response><Gather inputType="dtmf" numDigits="1" executionTimeout="15" action="…/api/vobiz/keypress?v=<id>" method="POST"><Speak>Hello, this is Pinwala. Press 1 to confirm this is your number.</Speak></Gather><Speak>We did not get your answer. Goodbye.</Speak></Response>`. **`inputType="dtmf"` is required**: without it Vobiz skips the Gather silently (first test failed this way). Keypress URL receives `Digits`; `1` → verified, reply `<Speak>Thank you, your number is verified.</Speak><Hangup/>`. Tested 24 Oct: works, ~12 s, billed as 60 s | App checks status every second; max 3 calls per number per 10 min |
+| Phone verification (main) | **Pinwaala calls, press 1 (Vobiz outbound).** `POST https://api.vobiz.ai/api/v1/Account/{auth_id}/Call/` with headers `X-Auth-ID`, `X-Auth-Token`; body `from: 918064269429`, `to: 91XXXXXXXXXX`, `answer_url` + `hangup_url` (our app), `time_limit: 60`, `hangup_on_ring: 40`. Answer URL returns `<Response><Gather inputType="dtmf" numDigits="1" executionTimeout="15" action="…/api/vobiz/keypress?v=<id>" method="POST"><Speak>Hello, this is Pinwaala. Press 1 to confirm this is your number.</Speak></Gather><Speak>We did not get your answer. Goodbye.</Speak></Response>`. **`inputType="dtmf"` is required**: without it Vobiz skips the Gather silently (first test failed this way). Keypress URL receives `Digits`; `1` → verified, reply `<Speak>Thank you, your number is verified.</Speak><Hangup/>`. Tested 24 Oct: works, ~12 s, billed as 60 s | App checks status every second; max 3 calls per number per 10 min |
 | Phone verification (fallback) | **Missed call to +91 80 6426 9429 (Vobiz inbound).** XML Application answer URL → `POST /api/vobiz/answer`. On `Event=StartApp` (ringing), match `From` (`91XXXXXXXXXX`, no `+`; match last 10 digits), mark verified, reply `<Response><Hangup/></Response>` → rejected unanswered, ₹0 (tested with two phones). Ignore the `Hangup` event. Then Firebase SMS code | |
 | Updates | Telegram bot, optional, one-way | |
 | Data | Supabase | |
 
-**AgenticOrg agent setup:** Agents → Create Virtual Employee → Persona *Pinwala Profile Agent* → Prompt (prepare Google profile or report + fixes from JSON; return JSON only; never invent; mark missing fields *needs_confirmation*) → Behavior: Gemini, no tools, approval required on every run → create in test mode, test, promote.
+**AgenticOrg agent setup:** Agents → Create Virtual Employee → Persona *Pinwaala Profile Agent* → Prompt (prepare Google profile or report + fixes from JSON; return JSON only; never invent; mark missing fields *needs_confirmation*) → Behavior: Gemini, no tools, approval required on every run → create in test mode, test, promote.
 
 ## AI behaviour rules
 
@@ -173,7 +173,7 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 3. **Screens in English for now; the voice agent speaks English, Hindi or Bengali.** Everything written (fields, profile, posts) is in English.
 4. **Warm, plain register.** No superlatives or claims he didn't make; no keywords stuffed into the shop name.
 5. **Tool failure is not content failure.** If speech, Sarvam or Places fails, say so and ask again; never fill gaps.
-6. **Nothing acts in his name without two approvals:** the owner's (his details) and Pinwala's reviewer in AgenticOrg (what the agent wrote). Codes need a third tap from the owner.
+6. **Nothing acts in his name without two approvals:** the owner's (his details) and Pinwaala's reviewer in AgenticOrg (what the agent wrote). Codes need a third tap from the owner.
 7. **Verification codes** are never stored or logged.
 8. **Reports show only what Google's public data shows:** rating, reviews, up to 10 photos, hours, website, phone. Never search views, calls or ranking.
 
@@ -206,7 +206,7 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 | **AgenticOrg login still blocked** | Required item missing | Organisers now: hackathon workspace invite (don't create a second organisation) |
 | AgenticOrg licence says organisations need a signed agreement | Compliance question | Confirm with organisers that hackathon use is covered |
 | AgenticOrg API details undocumented (request format, results) | Integration slips | Use the Python SDK from n8n; 15 min to test; ask organisers for a sample |
-| Approve-by-API blocked (requester can't self-approve) | Owner can't be the AgenticOrg approver | Pinwala reviewer approves in the dashboard (documented, works) |
+| Approve-by-API blocked (requester can't self-approve) | Owner can't be the AgenticOrg approver | Pinwaala reviewer approves in the dashboard (documented, works) |
 | ElevenLabs agent setup or field extraction slips | Hero step missing | 2 PM go/no-go → on-screen questions + voice notes |
 | Sarvam can't infer shop type from a photo | Weaker extraction | Type comes from the picker and the conversation |
 | Pine Labs checkout takes longer | "Money" requirement missing | Start by 2:15; ask the Pine Labs desk early |
@@ -222,13 +222,13 @@ Supabase ── shops, fields, consent, payments, referrers, live counter
 
 - [ ] Organisers: AgenticOrg invite, licence, features enabled
 - [ ] Places: own key or Replit's connector
-- [ ] Domain and trademark check for Pinwala
+- [ ] Domain and trademark check for Pinwaala
 
 ## Demo (2-minute video, and the stage if top 10)
 
 1. **Hook (15 s):** "Bapi-da has sold Kolkata mishti in Koramangala for 15 years. Search 'sweet shop near me' outside his door, and he doesn't exist."
 2. **Snapshot (20 s):** "Not on Google" → photo → pin → the map fills with 12 rival pins instantly.
 3. **Voice agent (30 s):** "I can see 12 sweet shops near you. What makes yours different?" A short conversation; the summary card fills in.
-4. **Owner approves, verifies, pays (20 s):** "Yes, this is my shop" → Pinwala calls his phone, he presses 1, ✓ verified → ₹99 through Pine Labs.
+4. **Owner approves, verifies, pays (20 s):** "Yes, this is my shop" → Pinwaala calls his phone, he presses 1, ✓ verified → ₹99 through Pine Labs.
 5. **Agent + human check (20 s):** the AgenticOrg agent's prepared profile appears in Approvals; Shipra approves → Bapi-da's screen (and Telegram) shows "Verification started."
 6. **Proof (15 s):** "N shop owners used it today, M paid," from the live counter.
