@@ -24,23 +24,33 @@ async function boot() {
   refreshStats(); setInterval(refreshStats, 10000);
 }
 
+let FEED = [], feedAt = 0;
+function showFeed() {
+  const rc = document.getElementById("recent"); if (!rc || !FEED.length) return;
+  rc.innerHTML = `<i class="live-dot"></i><span>${esc(FEED[feedAt % FEED.length])}</span>`;
+}
+setInterval(() => { feedAt++; showFeed(); }, 4000);
+
 async function refreshStats() {
   try {
     const s = await api("/api/stats");
     const el = document.getElementById("stats"); if (!el) return;
     el.innerHTML = `<span><b>${s.shops_checked}</b> shops checked</span><span><b>${s.onboarded}</b> owners verified</span><span><b>${s.pay_interest}</b> ready to pay ₹99</span>`;
-    const r = (s.recent || [])[0], rc = document.getElementById("recent");
-    if (r && rc) { const mins = Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 60000));
-      rc.textContent = `A ${r.shop_type || "shop"}${r.area ? " in " + r.area : ""} just ${r.kind === "pay_interest" ? "reserved the ₹99 pack" : "verified and started"} · ${mins < 60 ? mins + " min ago" : "today"}`; }
+    FEED = (s.recent || []).map((r) => {
+      const mins = Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 60000));
+      const ago = mins < 60 ? `${mins} min ago` : mins < 1440 ? `${Math.round(mins / 60)} h ago` : "earlier";
+      return `A ${r.shop_type || "shop"}${r.area ? " in " + r.area : ""} ${r.kind === "pay_interest" ? "reserved the ₹99 pack" : "verified and started"} · ${ago}`;
+    });
+    showFeed();
   } catch {}
 }
 
 function landing() {
   view(`
     <div class="stats" id="stats"></div>
+    <p class="recent" id="recent" aria-live="polite"></p>
     <h1>Get your shop found on Google.</h1>
     <p class="lead">See how many shops near you are on Google in 10 seconds. Then talk for two minutes and Pinwala prepares your profile. You approve everything.</p>
-    <p class="recent" id="recent"></p>
     <div class="langs"><span class="chip on">Talk in English</span><span class="chip on">हिंदी</span><span class="chip on">বাংলা</span></div>
     <div class="card"><h2>Check your street: is your shop on Google Maps?</h2>
       <button class="btn primary" id="yes">Yes, find my shop</button>

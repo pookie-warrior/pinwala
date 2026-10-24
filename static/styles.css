@@ -56,7 +56,12 @@ input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif;
 .stats { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 2px; }
 .stats span { font-size: 13px; background: var(--lacquer-2); border: 1px solid #2C4A40; border-radius: 999px; padding: 4px 10px; color: #CFDDD7; }
 .stats b { color: var(--marigold); font-weight: 600; }
-.recent { font-size: 13px; color: var(--marigold); min-height: 1em; margin: -8px 0 14px; }
+.recent { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #E9D9B8; min-height: 18px; margin: 10px 0 2px; }
+.recent span { animation: feedin .4s ease-out; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #5FD39A; flex: none; box-shadow: 0 0 0 0 rgba(95,211,154,.6); animation: livepulse 1.8s ease-out infinite; }
+@keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(95,211,154,.55) } 100% { box-shadow: 0 0 0 9px rgba(95,211,154,0) } }
+@keyframes feedin { from { opacity: 0; transform: translateY(3px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { .live-dot, .recent span { animation: none; } }
 .chat { max-height: 38vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 8px 0 12px; padding: 4px 2px; }
 .msg { max-width: 86%; padding: 10px 12px; border-radius: 14px; font-size: 15px; line-height: 1.4; }
 .msg.pin { align-self: flex-start; background: var(--ivory); color: var(--ink); border-bottom-left-radius: 4px; }
