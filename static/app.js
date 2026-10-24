@@ -35,7 +35,7 @@ async function refreshStats() {
   try {
     const s = await api("/api/stats");
     const el = document.getElementById("stats"); if (!el) return;
-    el.innerHTML = `<span><b>${s.shops_checked}</b> shops checked</span><span><b>${s.onboarded}</b> owners verified</span><span><b>${s.pay_interest}</b> ready to pay ₹99</span>`;
+    el.innerHTML = `<span><i class="gd b"></i><b>${s.shops_checked}</b> shops checked</span><span><i class="gd g"></i><b>${s.onboarded}</b> owners verified</span><span><i class="gd y"></i><b>${s.pay_interest}</b> ready to pay ₹99</span>`;
     FEED = (s.recent || []).map((r) => {
       const mins = Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 60000));
       const ago = mins < 60 ? `${mins} min ago` : mins < 1440 ? `${Math.round(mins / 60)} h ago` : "earlier";
@@ -52,7 +52,7 @@ function landing() {
     <h1>Get your shop found on <span class="gold">Google.</span></h1>
     <p class="lead">See how many shops near you are on Google in 10 seconds. Then talk for two minutes and Pinwala prepares your profile. You approve everything.</p>
     <div class="langs"><span class="chip on">Talk in English</span><span class="chip on">हिंदी</span><span class="chip on">বাংলা</span></div>
-    <div class="hero-map" aria-hidden="true">${[[14,30],[28,62],[40,22],[55,70],[66,34],[78,58],[86,24],[22,82],[70,84],[48,46]].map(([x, y], i) =>
+    <div class="hero-map gmap" aria-hidden="true"><span class="road r1"></span><span class="road r2"></span><span class="road r3"></span><span class="water"></span><span class="park p1"></span><span class="park p2"></span>${[[14,30],[28,62],[40,22],[55,70],[66,34],[78,58],[86,24],[22,82],[70,84],[34,50]].map(([x, y], i) =>
       `<span class="rp" style="left:${x}%;top:${y}%;--d:${i * 110}ms"></span>`).join("")}
       <span class="mp"></span><span class="ring"></span><span class="mp-label">Your shop</span></div>
     <div class="card"><h2>Check your street: is your shop on Google Maps?</h2>
@@ -146,12 +146,12 @@ function renderSnapshot() {
   const missing = p ? ["phone", "website", "hours"].filter((k) => !p[k]) : [];
   view(`<h2>${p ? esc(p.name) : "Your shop vs. Google"}</h2>
     <div class="card">
-      <div class="map">${dots}<span class="ring" style="left:50%;top:50%"></span><span class="pin me" style="left:50%;top:50%;--d:${Math.min(r.rivals.length, 20) * 60 + 200}ms"></span></div>
+      <div class="map gmap"><span class="road r1"></span><span class="road r2"></span><span class="road r3"></span><span class="water"></span><span class="park p1"></span><span class="park p2"></span>${dots}<span class="ring" style="left:50%;top:50%"></span><span class="pin me" style="left:50%;top:50%;--d:${Math.min(r.rivals.length, 20) * 60 + 200}ms"></span></div>
       ${p
         ? `<p><b>${p.rating ?? "–"}★</b> from <b>${p.reviews}</b> reviews · ${p.photos} photos${missing.length ? ` · missing: ${missing.join(", ")}` : ""}</p>`
         : `<p><span class="big">${n}</span><br>${esc(S.kind)}s within 1 km are on Google. <b>You're not, yet.</b></p>`}
       ${r.rivals.length ? `<p class="muted" style="margin:14px 0 4px">Top-reviewed near you</p><ol class="rivals">${r.rivals.slice(0, 3).map((x) =>
-        `<li><span>${esc(x.name)}</span><b>${x.rating ?? "–"}★ · ${Number(x.reviews || 0).toLocaleString("en-IN")}</b></li>`).join("")}</ol>` : ""}
+        `<li><span><i class="mini-pin"></i>${esc(x.name)}</span><b>${x.rating ?? "–"}<em class="star">★</em> · ${Number(x.reviews || 0).toLocaleString("en-IN")}</b></li>`).join("")}</ol>` : ""}
     </div>
     <button class="btn primary" id="talk">🎙️ Save this &amp; tell Pinwala about your shop</button>
     <button class="btn ghost" id="share">Know a shop owner? Send them this</button>`, { back: () => (S.place ? findShop() : newShop()), step: 1 });

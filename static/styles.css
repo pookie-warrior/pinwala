@@ -148,3 +148,41 @@ input, select { width: 100%; padding: 14px; font: 17px "Anek Latin", sans-serif;
   #app > *, .hero-map *, .map .pin, .btn.primary::after { animation: none !important; }
   .orb { transform: none; }
 }
+
+/* ---- Google Maps palette, used only for map visuals and small nods ---- */
+:root { --gm-blue: #4285F4; --gm-red: #EA4335; --gm-yellow: #FBBC04; --gm-green: #34A853;
+  --gm-land: #F2EFE9; --gm-road: #FFFFFF; --gm-water: #AADAFF; --gm-park: #C3E6C9; }
+.gmap { background: var(--gm-land) !important; border: 1px solid #DCD6C8 !important; }
+.gmap .road { position: absolute; background: var(--gm-road); box-shadow: 0 0 0 1px #E3DDD0; border-radius: 3px; }
+.gmap .r1 { left: -10%; right: -10%; top: 38%; height: 9px; transform: rotate(-8deg); }
+.gmap .r2 { top: -10%; bottom: -10%; left: 62%; width: 8px; transform: rotate(14deg); }
+.gmap .r3 { left: -10%; right: 40%; top: 74%; height: 6px; transform: rotate(4deg); }
+.gmap .water { position: absolute; right: -6%; top: -12%; width: 34%; height: 46%; background: var(--gm-water); border-radius: 46% 54% 60% 40%; }
+.gmap .park { position: absolute; background: var(--gm-park); border-radius: 42% 58% 48% 52%; }
+.gmap .p1 { left: 6%; top: 8%; width: 22%; height: 26%; }
+.gmap .p2 { left: 30%; bottom: -8%; width: 26%; height: 28%; }
+/* rival pins: red Google-style teardrops */
+.gmap .rp, .gmap .pin:not(.me) { width: 16px !important; height: 16px !important; border: 0 !important; background: var(--gm-red) !important;
+  border-radius: 50% 50% 50% 0 !important; box-shadow: 0 2px 4px rgba(0,0,0,.25); z-index: 1; }
+.gmap .rp::after, .gmap .pin:not(.me)::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #8E1F16; }
+.gmap .rp, .gmap .pin:not(.me) { animation-name: gpin !important; }
+@keyframes gpin { from { opacity: 0; transform: translate(-50%, -160%) rotate(-45deg) } to { opacity: 1; transform: translate(-50%, -100%) rotate(-45deg) } }
+.gmap .rp:not([style*="--d"]) , .gmap .pin:not(.me):not([style*="--d"]) { transform: translate(-50%, -100%) rotate(-45deg); }
+/* his pin: gold, larger, on top */
+.gmap .pin.me { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; border: 3px solid #fff; z-index: 3;
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-3)); box-shadow: 0 6px 14px rgba(0,0,0,.35); animation-name: gmepin !important; }
+@keyframes gmepin { from { opacity: 0; transform: translate(-50%, -260%) rotate(-45deg) } to { opacity: 1; transform: translate(-50%, -100%) rotate(-45deg) } }
+.hero-map.gmap .mp { width: 26px; height: 26px; border: 3px solid #fff; z-index: 3; }
+.hero-map.gmap .mp-label { color: #6B4A12; background: rgba(255,255,255,.9); padding: 1px 8px; border-radius: 10px; top: calc(52% + 8px); z-index: 3; }
+.gmap .ring { z-index: 2; border-color: var(--gold-3); }
+/* small nods */
+.gd { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.gd.b { background: var(--gm-blue) } .gd.g { background: var(--gm-green) } .gd.y { background: var(--gm-yellow) }
+.star { color: var(--gm-yellow); font-style: normal; margin-left: 1px; }
+.mini-pin { display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--gm-red); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); vertical-align: 0; }
+.rivals li span::before { content: none; }
+.steps span:nth-child(1).on i, .steps span:nth-child(1).done i { background: var(--gm-blue); }
+.steps span:nth-child(2).on i, .steps span:nth-child(2).done i { background: var(--gm-red); }
+.steps span:nth-child(3).on i, .steps span:nth-child(3).done i { background: var(--gm-yellow); }
+.steps span:nth-child(4).on i, .steps span:nth-child(4).done i { background: var(--gm-green); }
+.steps span:nth-child(1).on { color: #8AB4F8 } .steps span:nth-child(2).on { color: #F28B82 } .steps span:nth-child(3).on { color: #FDD663 } .steps span:nth-child(4).on { color: #81C995 }
