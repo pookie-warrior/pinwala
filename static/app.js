@@ -21,10 +21,10 @@ async function refreshStats() {
   try {
     const s = await api("/api/stats");
     const el = document.getElementById("stats"); if (!el) return;
-    el.innerHTML = `<span><b>${s.shops_checked}</b> shops checked</span><span><b>${s.onboarded}</b> owners onboarded</span><span><b>${s.pay_interest}</b> ready to pay ₹99</span>`;
+    el.innerHTML = `<span><b>${s.shops_checked}</b> shops checked</span><span><b>${s.onboarded}</b> owners verified</span><span><b>${s.pay_interest}</b> ready to pay ₹99</span>`;
     const r = (s.recent || [])[0], rc = document.getElementById("recent");
     if (r && rc) { const mins = Math.max(1, Math.round((Date.now() - Date.parse(r.created_at)) / 60000));
-      rc.textContent = `A ${r.shop_type || "shop"}${r.area ? " in " + r.area : ""} just ${r.kind === "pay_interest" ? "reserved the ₹99 pack" : "got onboarded"} · ${mins < 60 ? mins + " min ago" : "today"}`; }
+      rc.textContent = `A ${r.shop_type || "shop"}${r.area ? " in " + r.area : ""} just ${r.kind === "pay_interest" ? "reserved the ₹99 pack" : "verified and started"} · ${mins < 60 ? mins + " min ago" : "today"}`; }
   } catch {}
 }
 
@@ -121,9 +121,9 @@ async function snapshot() {
         : `<p><span class="big">${n}</span><br>${esc(S.kind)}s within 1 km are on Google. <b>You're not, yet.</b></p>`}
       ${top ? `<p class="muted">Most-reviewed nearby: ${top.rating}★ from ${top.reviews.toLocaleString()} reviews</p>` : ""}
     </div>
-    <button class="btn primary" id="talk">🎙️ Tell Pinwala about your shop (2 min)</button>
+    <button class="btn primary" id="talk">🎙️ Save this &amp; tell Pinwala about your shop</button>
     <button class="btn ghost" id="share">Know a shop owner? Send them this</button>`);
-  document.getElementById("talk").onclick = talk;
+  document.getElementById("talk").onclick = () => (S.vid ? talk() : verify());
   post("/api/event/checked", { session: SESSION, kind: S.kind, area: S.area, listed: !!S.place, rival_count: r.count, ref: REF });
   document.getElementById("share").onclick = async () => {
     const url = `${location.origin}/?ref=share`, text = `Is your shop on Google Maps? ${n} ${S.kind}s near here already are. Check in 10 seconds: ${url}`;
@@ -190,7 +190,7 @@ async function finish(cid) {
 function summary() {
   const f = S.fields, rows = [
     ["Shop name", S.place ? S.place.name : f.shop_name_spoken], ["Owner", f.owner_name], ["Type", S.kind], ["Sells", f.sells],
-    ["Hours", [f.hours, f.open_days].filter(Boolean).join(", ")], ["Phone", f.phone],
+    ["Hours", [f.hours, f.open_days].filter(Boolean).join(", ")], ["Phone", f.phone || S.phone],
     ["Customers", f.customers], ["Wants more", f.goals], ["Main rival", f.main_rival],
   ];
   view(`<h2>Is this right?</h2><div class="card">
@@ -208,30 +208,43 @@ function summary() {
       listed: !!S.place, place_id: S.place?.id || null, kind: S.kind, lat: S.lat, lng: S.lng, fields: S.fields,
       owner: document.getElementById("nm").value, gmail: document.getElementById("gm").value,
       rivals: S.rivals.rivals.slice(0, 5), rival_count: S.rivals.count }) });
-    S.recordId = r.id; verify();
+    S.recordId = r.id; done(true);
   };
 }
 
 function verify() {
   view(`<h2>Verify your number</h2><div class="card">
-    <p>We'll call you from <b>${CFG.vobiz_number}</b>. Pick up and <b>press 1</b>.</p>
-    <input id="ph" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" value="${esc((S.fields?.phone || "").slice(-10))}">
+    <p>Save your result and talk to Pinwala. Verify your mobile number first, it takes one tap.</p>
+    <input id="ph" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
     <p class="err" id="e"></p>
-    <button class="btn primary" id="call">📞 Call me to verify</button>
-    <a class="btn dark" href="tel:08064269429" id="miss">Or give us a missed call (free)</a></div>`);
-  const e = document.getElementById("e");
-  document.getElementById("call").onclick = async () => {
-    e.textContent = "";
-    const r = await api("/api/verify/call", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: document.getElementById("ph").value, record: { id: S.recordId, session: SESSION, kind: S.kind, area: S.area, ref: REF } }) });
-    if (r.error) return (e.textContent = r.error);
-    document.getElementById("call").textContent = "Calling you now… pick up and press 1";
+    <button class="btn primary" id="miss">📞 Give a missed call · free, we won't pick up</button>
+    <button class="btn dark" id="call">Or call me, I'll press 1</button>
+    <p class="muted" id="hint">Call from the same number you typed. It rings once and cuts.</p></div>`);
+  const e = document.getElementById("e"), ph = () => document.getElementById("ph").value;
+  const record = { session: SESSION, kind: S.kind, area: S.area, ref: REF };
+  const wait = async (vid, btn, label) => {
     for (let i = 0; i < 60; i++) {
       await new Promise((ok) => setTimeout(ok, 2000));
-      const s = await api(`/api/verify/${r.vid}`);
-      if (s.status === "verified") { S.vid = r.vid; return done(true); }
-      if (s.status === "missed" || s.status === "failed") { e.textContent = "We didn't get a 1. Try again, or give us a missed call."; document.getElementById("call").textContent = "📞 Call me again"; return; }
+      const st = await api(`/api/verify/${vid}`);
+      if (st.status === "verified") { S.vid = vid; S.phone = ph(); refreshStats(); return talk(); }
+      if (st.status === "missed" || st.status === "failed") { e.textContent = "We didn't get a 1. Try again, or give us a missed call."; btn.textContent = label; return; }
     }
+    e.textContent = "We haven't received your call yet. Try again."; btn.textContent = label;
+  };
+  document.getElementById("miss").onclick = async () => {
+    e.textContent = "";
+    const r = await post("/api/verify/missed", { phone: ph(), record });
+    if (r.error) return (e.textContent = r.error);
+    const b = document.getElementById("miss"); b.textContent = "Waiting for your missed call…";
+    location.href = "tel:08064269429";
+    wait(r.vid, b, "📞 Give a missed call · free, we won't pick up");
+  };
+  document.getElementById("call").onclick = async () => {
+    e.textContent = "";
+    const r = await post("/api/verify/call", { phone: ph(), record });
+    if (r.error) return (e.textContent = r.error);
+    const b = document.getElementById("call"); b.textContent = "Calling you now… pick up and press 1";
+    wait(r.vid, b, "Or call me, I'll press 1");
   };
 }
 

@@ -269,6 +269,18 @@ async def verify_call(req: Request):
     return {"vid": vid}
 
 
+@app.post("/api/verify/missed")
+async def verify_missed(req: Request):
+    """Register a pending missed-call verification; the inbound call's From number completes it."""
+    body = await req.json()
+    phone = last10(body.get("phone", ""))
+    if len(phone) != 10:
+        return JSONResponse({"error": "Enter a 10-digit mobile number"}, 400)
+    vid = uuid.uuid4().hex[:12]
+    verifications[vid] = {"phone": phone, "status": "awaiting_missed", "at": time.time(), "record": body.get("record") or {}}
+    return {"vid": vid}
+
+
 @app.get("/api/verify/{vid}")
 def verify_status(vid: str):
     v = verifications.get(vid)
@@ -281,7 +293,7 @@ async def vobiz_answer(req: Request, v: str = ""):
     if not v:  # inbound missed call: verify by caller number, reject unanswered
         frm = last10(form.get("From", ""))
         for x in verifications.values():
-            if x["phone"] == frm and x["status"] in ("calling", "missed"):
+            if x["phone"] == frm and x["status"] in ("awaiting_missed", "calling", "missed") and time.time() - x["at"] < 900:
                 x["status"] = "verified"
                 r = x.get("record") or {}
                 log_event("onboarded", session_id=r.get("session"), phone_hash=phone_hash(frm), phone_last4=frm[-4:],
